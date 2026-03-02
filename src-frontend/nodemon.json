@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json.schemastore.org/nodemon.json",
+  "exec": "npm start",
+  "ext": "*.js,*.ts,*.tsx,*.jsx,*.css,*.json",
+  "ignore": ["./dist/"],
+  "watch": ["*", ".env"],
+  "verbose": true
+}

@@ -1,0 +1,20 @@
+{
+  "name": "my-app-frontend",
+  "type": "module",
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "nodemon": "^3.1.14",
+    "tsdown": "^0.21.0-beta.2",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "build": "tsc && tsdown -t chrome58 -t firefox57 -t safari11 -t edge16",
+    "start": "npm run build",
+    "dev": "nodemon"
+  }
+}

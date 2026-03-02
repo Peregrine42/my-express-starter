@@ -1,19 +1,23 @@
 {
   "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "target": "ES2024",
-    "jsx": "react-jsx",
+    "lib": [
+      "ESNext",
+    ],
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "allowImportingTsExtensions": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     "strict": true,
-    "checkJs": true
   },
   "exclude": [
     "node_modules",
-    "**/node_modules/*"
+    "**/node_modules/*",
+    "src-frontend"
   ]
 }

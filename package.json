@@ -1,9 +1,30 @@
 {
+  "name": "my-app",
+  "type": "module",
   "dependencies": {
-    "express": "^5.2.1"
+    "compression": "^1.8.1",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "pug": "^3.0.3"
   },
   "devDependencies": {
+    "@types/compression": "^1.8.1",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.2.3"
+    "@types/node": "^25.2.3",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.14",
+    "pkgroll": "^2.27.0",
+    "tsdown": "^0.21.0-beta.2",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "frontend:install": "cd src-frontend/ && npm i -- ",
+    "frontend:build": "cd src-frontend/ && npm run build",
+    "frontend:start": "cd src-frontend/ && npm start",
+    "frontend:dev": "cd src-frontend/ && npm run dev",
+    "build": "tsc && tsdown",
+    "start": "node dist/index.mjs",
+    "dev": "concurrently npm:frontend:dev npm:backend:dev",
+    "backend:dev": "nodemon"
   }
 }
