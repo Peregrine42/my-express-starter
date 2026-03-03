@@ -2,29 +2,38 @@
   "name": "my-app",
   "type": "module",
   "dependencies": {
-    "compression": "^1.8.1",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "pug": "^3.0.3"
+    "compression": "1.8.1",
+    "dotenv": "17.3.1",
+    "express": "5.2.1",
+    "pug": "3.0.3"
   },
   "devDependencies": {
-    "@types/compression": "^1.8.1",
-    "@types/express": "^5.0.6",
-    "@types/node": "^25.2.3",
-    "concurrently": "^9.2.1",
-    "nodemon": "^3.1.14",
-    "pkgroll": "^2.27.0",
-    "tsdown": "^0.21.0-beta.2",
-    "typescript": "^5.9.3"
+    "@types/compression": "1.8.1",
+    "@types/express": "5.0.6",
+    "@types/jest": "30.0.0",
+    "@types/node": "25.2.3",
+    "concurrently": "9.2.1",
+    "jest": "30.2.0",
+    "nodemon": "3.1.14",
+    "pkgroll": "2.27.0",
+    "tsdown": "0.21.0-beta.2",
+    "typescript": "5.9.3"
   },
   "scripts": {
-    "frontend:install": "cd src-frontend/ && npm i -- ",
-    "frontend:build": "cd src-frontend/ && npm run build",
-    "frontend:start": "cd src-frontend/ && npm start",
-    "frontend:dev": "cd src-frontend/ && npm run dev",
-    "build": "tsc && tsdown",
+    "frontend:install": "cd frontend/ && npm i -- ",
+    "frontend:build": "cd frontend/ && npm run build",
+    "frontend:start": "cd frontend/ && npm start",
+    "frontend:dev": "cd frontend/ && npm run dev",
+    "frontend:test": "cd frontend/ && npm test",
+    "frontend:test:watch": "nodemon --config ./nodemon.frontend.json -x npm run frontend:test -- -- ",
+    "backend:build": "tsc && tsdown",
+    "backend:test": "tsdown -c ./tsdown.test.config.ts && jest --config jest.config.cjs",
+    "backend:test:watch": "nodemon -x npm run backend:test -- -- ",
+    "backend:build:start": "npm run backend:build && npm start",
     "start": "node dist/index.mjs",
+    "backend:dev": "nodemon -x npm run backend:build:start -- -- ",
     "dev": "concurrently npm:frontend:dev npm:backend:dev",
-    "backend:dev": "nodemon"
+    "test": "npm run backend:test && npm run frontend:test",
+    "test:watch": "concurrently npm:backend:test:watch npm:frontend:test:watch"
   }
 }

@@ -7,6 +7,7 @@ export default defineConfig({
   clean: true,
   platform: "browser",
   env: process.env,
+  format: "iife",
   sourcemap: true,
   deps: {
     alwaysBundle: [/.*/],

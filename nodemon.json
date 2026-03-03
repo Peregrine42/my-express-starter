@@ -1,8 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/nodemon.json",
-  "exec": "npm run build && npm start",
   "ext": "*.js,*.ts,*.json",
-  "ignore": ["./src-frontend/", "./dist/", "./public/pages/"],
+  "ignore": ["./frontend/", "./dist/", "./public/pages/"],
   "watch": ["*", ".env"],
   "verbose": true
 }
