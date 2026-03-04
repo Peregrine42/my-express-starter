@@ -20,7 +20,6 @@
   "scripts": {
     "build": "tsc && tsdown -t chrome58 -t firefox57 -t safari11 -t edge16",
     "start": "npm run build",
-    "dev": "nodemon",
     "test": "tsdown -c ./tsdown.test.config.mts && jest --config jest.config.cjs"
   }
 }
