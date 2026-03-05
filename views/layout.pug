@@ -1,9 +1,11 @@
 doctype html
 html(lang="en")
   head
-    meta(name="viewport", content="width=device-width, initial-scale=1.0")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
     title= "My App - " + (title || "Welcome")
     link(rel="icon" href="/public/favicon.ico")
+    link(rel="stylesheet" href="/public/pages/base.css")
     block head
+
   body
     block content

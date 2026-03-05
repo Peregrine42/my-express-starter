@@ -25,7 +25,6 @@ export default defineConfig([
   {
     files: ["**/*.ts"],
     ignores: ["frontend/", "public/", "dist/"],
-
     languageOptions: {
       parserOptions: {
         project: true,

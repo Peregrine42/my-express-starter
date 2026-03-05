@@ -21,6 +21,7 @@
     "**/node_modules/*",
     "frontend",
     "public",
-    "dist"
+    "dist",
+    "coverage"
   ]
 }

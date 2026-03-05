@@ -3,11 +3,15 @@ dotenv.config();
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  entry: ["./src/entrypoints/*.tsx"],
+  entry: ["./css/**/*.css", "./src/entrypoints/*.tsx"],
   clean: true,
   platform: "browser",
   env: process.env,
-  format: "iife",
+  format: "esm",
+  outputOptions: {
+    entryFileNames: "[name].js",
+    cssEntryFileNames: "[name].css",
+  },
   sourcemap: true,
   deps: {
     alwaysBundle: [/.*/],

@@ -5,10 +5,15 @@ export default defineConfig({
   platform: "node",
   entry: ["./test/suite/**/*.ts"],
   outDir: "./dist/",
+  unbundle: true,
   target: "node24",
   format: "commonjs",
-  sourcemap: true,
+  sourcemap: "inline",
   deps: {
+    skipNodeModulesBundle: true,
     onlyAllowBundle: false,
+  },
+  checks: {
+    legacyCjs: false,
   },
 });

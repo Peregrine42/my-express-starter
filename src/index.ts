@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-import { getRouter } from "./getRouter";
+import { getRouter } from "./lib/getRouter";
 import { getMyApp } from "./getMyApp";
 import { getMyRoutes } from "./getMyRoutes";
 

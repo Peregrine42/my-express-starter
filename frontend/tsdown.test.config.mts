@@ -6,12 +6,20 @@ export default defineConfig({
   entry: ["./test/suite/*.ts", "./test/suite/*.tsx"],
   outDir: "./dist/",
   target: "node24",
-  format: "commonjs",
+  format: ["cjs"],
+  checks: {
+    legacyCjs: false,
+  },
   sourcemap: true,
   env: process.env,
+  unbundle: true,
+  outputOptions: {
+    entryFileNames: "[name].js",
+    cssEntryFileNames: "[name].css",
+  },
   deps: {
-    alwaysBundle: [/.*/],
     onlyAllowBundle: false,
+    skipNodeModulesBundle: true,
   },
   minify: true,
   treeshake: {

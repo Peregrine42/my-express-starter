@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/nodemon.json",
-  "ext": "*.js,*.ts,*.json",
+  "ext": "*.js,*.ts,*.json,*.pug",
   "ignore": ["./frontend/", "./dist/", "./public/pages/"],
   "watch": ["*", ".env"],
   "verbose": true

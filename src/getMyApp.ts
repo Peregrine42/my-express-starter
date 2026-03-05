@@ -8,7 +8,7 @@ export async function getMyApp() {
   app.use(
     "/public",
     compression(),
-    express.static(path.join(import.meta.dirname, "..", "public")),
+    express.static(path.join(import.meta.dirname, "..", "..", "public")),
   );
   app.set("view engine", "pug");
 

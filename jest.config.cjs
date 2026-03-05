@@ -1,4 +1,8 @@
+/** @type {import("jest").Config} */
 module.exports = {
-  testPathIgnorePatterns: ["<rootDir>/frontend", "<rootDir>/test"],
+  roots: ["./dist"],
+  testMatch: ["<rootDir>/dist/**/*.test.cjs"],
+  collectCoverageFrom: ["!**/_virtual/**"],
   setupFilesAfterEnv: ["<rootDir>/test/setupTests.js"],
+  collectCoverage: true,
 };

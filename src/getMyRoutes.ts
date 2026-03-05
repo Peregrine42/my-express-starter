@@ -1,4 +1,4 @@
-import { type RoutesConfig } from "./getRouter";
+import { type RoutesConfig } from "./lib/getRouter";
 import { Home } from "./controllers/home";
 
 export function getMyRoutes() {

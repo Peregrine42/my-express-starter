@@ -1,7 +1,29 @@
 import express, { Router } from "express";
-import { configureAndAttachRoutes } from "../../src/getRouter";
+import { configureAndAttachRoutes } from "../../../src/lib/getRouter";
 import supertest from "supertest";
-import { BaseController } from "../../src/Controller";
+import { BaseController } from "../../../src/lib/Controller";
+
+describe("when a handler IS defined", () => {
+  it("delegates to the handler", async () => {
+    // ARRANGE
+    const router = Router();
+    class TestController extends BaseController {}
+    const testController = new TestController();
+    configureAndAttachRoutes(router, {
+      "GET /": [testController, "GET"],
+    });
+    const app = express();
+    app.use("/", router);
+    const testAgent = supertest(app);
+
+    // ACT
+    const response = await testAgent.get("/");
+
+    // ASSERT
+    expect(response.statusCode).toEqual(404);
+    expect(response.text).toHaveLength(0);
+  });
+});
 
 describe("when a handler is not defined", () => {
   it("responds with 404 - index", async () => {
@@ -41,9 +63,9 @@ describe("when a handler is not defined", () => {
     const router = Router();
 
     class CustomController extends BaseController {
-      GET(_req: express.Request, res: express.Response): void {
+      GET = (_req: express.Request, res: express.Response): void => {
         res.status(404).send("Not found!");
-      }
+      };
     }
 
     configureAndAttachRoutes(router, {

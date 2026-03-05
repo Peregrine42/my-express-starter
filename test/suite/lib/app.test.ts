@@ -1,5 +1,5 @@
 import supertest from "supertest";
-import { getMyApp } from "../../src/getMyApp";
+import { getMyApp } from "../../../src/getMyApp";
 
 describe("App", () => {
   it("can serve static files", async () => {
