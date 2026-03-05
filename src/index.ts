@@ -1,16 +1,19 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { getRouter } from "./lib/getRouter";
-import { getMyApp } from "./getMyApp";
+import { getApp } from "./lib/getApp";
 import { getMyRoutes } from "./getMyRoutes";
 
 (async () => {
   const PORT = Number(process.env.PORT || "3000");
 
-  const app = await getMyApp();
   const routes = getMyRoutes();
   const myRouter = await getRouter(routes);
-  app.use("/", myRouter);
+  const app = await getApp({
+    withApp: async (app) => {
+      app.use("/", myRouter);
+    },
+  });
 
   app.listen(PORT, () => {
     console.log(`App is listening at http://localhost:${PORT}`);

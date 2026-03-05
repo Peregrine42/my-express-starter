@@ -28,15 +28,20 @@ type LowercaseMethods = (typeof lowercaseMethods)[number];
 _.zip(methods, lowercaseMethods).forEach(([method, lowercaseMethod]) => {
   describe("Call the fallback (404)", () => {
     it(`for ${method}`, async () => {
+      // ARRANGE
       const testController = new BaseController();
       const server = express();
       server[lowercaseMethod as LowercaseMethods]("/", (req, res) => {
         testController[method as Methods](req, res);
       });
+
+      // ACT
       const resp = await inject(server, {
         method: lowercaseMethod,
         url: "/",
       });
+
+      // ASSERT
       expect(resp.statusCode).toEqual(404);
     });
   });
