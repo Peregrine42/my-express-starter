@@ -5,17 +5,45 @@ function notFound(_req: express.Request, res: express.Response) {
 }
 
 export abstract class Controller {
-  abstract GET(req: express.Request, res: express.Response): void;
-  abstract POST(req: express.Request, res: express.Response): void;
-  abstract FALLBACK(req: express.Request, res: express.Response): void;
-  abstract HEAD(req: express.Request, res: express.Response): void;
-  abstract OPTIONS(req: express.Request, res: express.Response): void;
-  abstract PUT(req: express.Request, res: express.Response): void;
-  abstract PATCH(req: express.Request, res: express.Response): void;
-  abstract DELETE(req: express.Request, res: express.Response): void;
+  abstract GET(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> | void;
+  abstract POST(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> | void;
+  abstract FALLBACK(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> | void;
+  abstract HEAD(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> | void;
+  abstract OPTIONS(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> | void;
+  abstract PUT(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> | void;
+  abstract PATCH(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> | void;
+  abstract DELETE(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<void> | void;
 }
 
 export class BaseController extends Controller {
+  constructor() {
+    super();
+  }
+
   GET = (req: express.Request, res: express.Response) => {
     return this.FALLBACK(req, res);
   };

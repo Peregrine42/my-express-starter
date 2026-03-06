@@ -1,23 +1,16 @@
-import inject from "light-my-request";
-import _ from "lodash";
-import { Home } from "../../src/controllers/home";
-import { getApp } from "../../src/lib/getApp";
+import { Home } from "../../src/controllers/Home";
+import { setupController } from "../helpers";
 
 describe("the homepage", () => {
-  it("has a welcome message in title", async () => {
-    const controllerUnderTest = new Home();
-    const server = await getApp({
-      withApp: async (app) => {
-        app.get("/", (req, res) => {
-          controllerUnderTest.GET(req, res);
-        });
-      },
-    });
+  it("has a welcome message", async () => {
+    // ARRANGE
+    const [dispatch] = await setupController("GET /", [Home, "GET"]);
 
-    const resp = await inject(server, {
-      method: "get",
-      url: "/",
-    });
+    // ACT
+    const resp = await dispatch();
+
+    // ASSERT
     expect(resp.statusCode).toEqual(200);
+    expect(resp.body).toContain("Welcome");
   });
 });

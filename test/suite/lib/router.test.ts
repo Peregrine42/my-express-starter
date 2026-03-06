@@ -8,9 +8,8 @@ describe("when a handler IS defined", () => {
     // ARRANGE
     const router = Router();
     class TestController extends BaseController {}
-    const testController = new TestController();
     configureAndAttachRoutes(router, {
-      "GET /": [testController, "GET"],
+      "GET /": [TestController, "GET"],
     });
     const app = express();
     app.use("/", router);
@@ -69,7 +68,7 @@ describe("when a handler is not defined", () => {
     }
 
     configureAndAttachRoutes(router, {
-      "404": [new CustomController(), "GET"],
+      "404": [CustomController, "GET"],
     });
     const app = express();
     app.use("/", router);
