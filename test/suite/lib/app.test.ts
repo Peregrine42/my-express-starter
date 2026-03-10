@@ -8,6 +8,10 @@ describe("App", () => {
   describe("on start", () => {
     let shutdown: ShutdownApp | void;
 
+    afterEach(async () => {
+      await shutdown?.();
+    });
+
     it("starts an HTTP server", async () => {
       // ARRANGE
       const [_app, startApp] = await getApp({
@@ -17,8 +21,8 @@ describe("App", () => {
           });
         },
         consoleOverride: {
-          log: jest.fn()
-        }
+          log: jest.fn(),
+        },
       });
       shutdown = await startApp();
 
@@ -27,6 +31,35 @@ describe("App", () => {
 
       // ASSERT
       expect(resp.status).toEqual(200);
+    });
+
+    it("can do custom functionality after listening for requests", async () => {
+      // ARRANGE
+      const customShutdownCallback = jest
+        .fn()
+        .mockImplementation(async () => {});
+      const customStartupCallback = jest
+        .fn()
+        .mockImplementation(async () => {});
+      const [_app, startApp] = await getApp({
+        withAppStartupComplete: async () => {
+          await customStartupCallback();
+
+          return async () => await customShutdownCallback();
+        },
+        consoleOverride: {
+          log: jest.fn(),
+        },
+      });
+      shutdown = await startApp();
+
+      // ACT
+      await shutdown();
+      shutdown = undefined;
+
+      // ASSERT
+      expect(customStartupCallback).toHaveBeenCalled();
+      expect(customShutdownCallback).toHaveBeenCalled();
     });
 
     afterEach(async () => {
@@ -68,5 +101,26 @@ describe("App", () => {
     // ASSERT
     expect(response.statusCode).toEqual(500);
     expect(response.text).toEqual("Internal Server Error");
+  });
+
+  it("can shutdown cleanly on error", async () => {
+    // ACT
+    const act = async () => {
+      const [_app, startup] = await getApp({
+        beforeAppStartup: async () => {
+          throw new Error("Oops!");
+        },
+        consoleOverride: {
+          ...console,
+          error: jest.fn(),
+          log: jest.fn(),
+        } as ConsoleOverride,
+      });
+
+      await startup();
+    };
+    // ASSERT
+
+    await expect(act).rejects.toThrow(Error);
   });
 });
