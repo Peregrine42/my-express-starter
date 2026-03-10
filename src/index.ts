@@ -3,21 +3,21 @@ dotenv.config();
 import { getRouter } from "./lib/getRouter";
 import { getApp } from "./lib/getApp";
 import { getMyRoutes } from "./getMyRoutes";
+import { envVarNames } from "./env";
+import { validateEnv } from "./lib/env";
 
 (async () => {
-  const PORT = Number(process.env.PORT || "3000");
+  validateEnv(envVarNames);
 
   const routes = getMyRoutes();
   const myRouter = await getRouter(routes);
-  const app = await getApp({
+  const [_app, startApp] = await getApp({
     withApp: async (app) => {
       app.use("/", myRouter);
     },
   });
 
-  app.listen(PORT, () => {
-    console.log(`App is listening at http://localhost:${PORT}`);
-  });
+  await startApp();
 })().catch((e) => {
   process.exitCode = 1;
   console.error(e);

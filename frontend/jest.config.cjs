@@ -12,6 +12,6 @@ module.exports = {
     "!src/**",
     "!*"
   ],
-  setupFilesAfterEnv: ["<rootDir>/test/setupTests.js"],
+  setupFilesAfterEnv: ["<rootDir>/test/setupTests.cjs"],
   collectCoverage: true,
 };

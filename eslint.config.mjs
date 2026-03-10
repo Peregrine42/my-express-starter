@@ -9,7 +9,7 @@ export default defineConfig([
   },
   {
     ...eslint.configs.recommended,
-    files: ["**/*.js", "**/*.mjs"],
+    files: ["**/*.js"],
   },
   {
     ...eslint.configs.recommended,
@@ -21,11 +21,14 @@ export default defineConfig([
     },
     files: ["**/*.cjs"],
   },
-  ...tseslint.configs.recommended,
   {
     files: ["**/*.ts"],
     ignores: ["frontend/", "public/", "dist/"],
+    plugins: {
+      "@typescript-eslint": tseslint.plugin,
+    },
     languageOptions: {
+      parser: tseslint.parser,
       parserOptions: {
         project: true,
         tsconfigRootDir: import.meta.dirname,
@@ -37,6 +40,7 @@ export default defineConfig([
       },
     },
     rules: {
+      ...tseslint.configs.eslintRecommended.rules,
       semi: "error",
       "prefer-const": "warn",
       "@typescript-eslint/no-unused-vars": [

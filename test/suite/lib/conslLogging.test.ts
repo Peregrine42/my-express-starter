@@ -1,15 +1,16 @@
 import express from "express";
-import { consl, setupConslLogging } from "../../../src/lib/conslLogging";
+import { setupConslLogging } from "../../../src/lib/conslLogging";
 import inject from "light-my-request";
 
 describe("setupConslLogging", () => {
-  it("adds the base Console object to the response `locals` object", async () => {
+  it("adds the Consl object to the response `locals` object", async () => {
     // ARRANGE
     const app = express();
-    app.use(setupConslLogging());
+    const [consl, conslMiddleware] = setupConslLogging();
+    app.use(conslMiddleware);
     let found = undefined;
     app.get("/", (_req, res) => {
-      found = res.locals.console;
+      found = res.locals.consl;
       res.send("Logged");
     });
 
@@ -20,34 +21,14 @@ describe("setupConslLogging", () => {
     });
 
     // ASSERT
-    expect(found).toEqual(console);
-  });
-
-  it("adds a custom log object to the response `locals` object", async () => {
-    // ARRANGE
-    const ourConsole = { error: jest.fn() };
-    const app = express();
-    app.use(setupConslLogging({ console: ourConsole }));
-    let found = undefined;
-    app.get("/", (_req, res) => {
-      found = res.locals.console;
-      res.send("Logged");
-    });
-
-    // ACT
-    await inject(app, {
-      method: "get",
-      url: "/",
-    });
-
-    // ASSERT
-    expect(found).toEqual(ourConsole);
+    expect(found).toEqual(consl);
   });
 
   it("optionally adds a reqId for tracing", async () => {
     // ARRANGE
     const app = express();
-    app.use(setupConslLogging({ addReqId: true }));
+    const [_consl, conslMiddleware] = setupConslLogging({ addReqId: true });
+    app.use(conslMiddleware);
     let found = undefined;
     app.get("/", (_req, res) => {
       found = res.locals.reqId;
@@ -68,53 +49,60 @@ describe("setupConslLogging", () => {
 describe("log", () => {
   it("takes a payload acceptable by console.error", () => {
     // ARRANGE
+    const [consl] = setupConslLogging({
+      consoleOverride: { error: jest.fn() },
+    });
+
     const e = new Error("Oops!");
-    jest.spyOn(console, "error").mockImplementation(() => {});
 
     // ACT + ASSERT
     expect(consl("error", e)).toEqual(["ERROR", e]);
   });
 
-  it("introspects the response for a `locals` object", () => {
-    // ARRANGE + ACT + ASSERT
-    expect(
-      consl("error", { locals: { console: { error: jest.fn() } } }),
-    ).toEqual(["ERROR"]);
-  });
-
   it("can optionally take the request object to give more context", () => {
-    // ARRANGE + ACT + ASSERT
+    // ARRANGE
+    const [consl] = setupConslLogging({
+      consoleOverride: { log: jest.fn() },
+    });
+
+    // ACT + ASSERT
     expect(
       consl(
         "log",
         { method: "get", url: "/hi-there" }, // req
-        { locals: { console: { log: jest.fn() } } }, // res
       ),
     ).toEqual(["LOG", "GET", "/hi-there"]);
   });
 
   it("can optionally take a request ID to trace response logging to a particular request", () => {
-    // ARRANGE + ACT + ASSERT
+    // ARRANGE
+    const [consl] = setupConslLogging({
+      consoleOverride: { error: jest.fn(), log: jest.fn() },
+    });
+
+    // ACT + ASSERT
     expect(
       consl(
         "log",
-        { locals: { console: { log: jest.fn() }, reqId: "abc" } }, // res
+        { locals: { reqId: "abc" } }, // res
       ),
     ).toEqual(["reqId:abc", "LOG"]);
 
-    // ARRANGE + ACT + ASSERT
+    // ACT + ASSERT
     expect(
       consl(
         "error",
         { method: "get", url: "/hi-there" }, // req
-        { locals: { reqId: "def", console: { error: jest.fn() } } }, // res
+        { locals: { reqId: "def" } }, // res
       ),
     ).toEqual(["reqId:def", "ERROR", "GET", "/hi-there"]);
   });
 
   it("just logs to the console", () => {
     // ARRANGE
-    jest.spyOn(console, "log").mockImplementation(() => {});
+    const [consl] = setupConslLogging({
+      consoleOverride: { log: jest.fn() },
+    });
 
     // ACT + ASSERT
     expect(consl("log", "foo")).toEqual(["LOG", "foo"]);

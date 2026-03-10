@@ -1,10 +1,12 @@
 import crypto from "crypto";
+import express from "express";
 
-export type Cons = {
-  error?: typeof console.error;
-  log?: typeof console.log;
-  warn?: typeof console.warn;
-};
+export type ConsoleOverride = Partial<{
+  error: typeof console.error;
+  log: typeof console.log;
+  warn: typeof console.warn;
+  trace: typeof console.trace;
+}>;
 
 type Req = {
   url?: string;
@@ -13,84 +15,95 @@ type Req = {
 type Res = {
   locals: {
     reqId?: string;
-    console: Cons;
+    consl: Consl;
   };
 };
 
 export type Consl = {
   (
-    level: keyof Res["locals"]["console"],
+    level: keyof ConsoleOverride,
     req: Req,
     res: Res,
     ...messages: unknown[]
   ): unknown[];
-  (
-    level: keyof Res["locals"]["console"],
-    res: Res,
-    ...messages: unknown[]
-  ): unknown[];
-  (level: keyof Res["locals"]["console"], ...messages: unknown[]): unknown[];
+  (level: keyof ConsoleOverride, res: Res, ...messages: unknown[]): unknown[];
+  (level: keyof ConsoleOverride, ...messages: unknown[]): unknown[];
 };
 
-export const consl: Consl = (level, r1, r2, ...messages) => {
-  const res = r2 as Res;
-  const r2IsRes = res?.locals?.console;
-  if (r2IsRes) {
-    const req = r1 as Req;
-    const payload = [
-      level.toLocaleUpperCase(),
-      req?.method?.toLocaleUpperCase(),
-      req?.url,
-      ...messages,
-    ];
+export const initConsl: ({
+  consoleObj,
+}: {
+  consoleObj: Required<ConsoleOverride>;
+}) => Consl = ({ consoleObj }) => {
+  return (level, ...messages) => {
+    const r1 = messages[0] as Req;
+    const r2 = messages[1] as Res | undefined;
 
-    if (res.locals.reqId) {
-      const reqId = res.locals.reqId;
-      payload.unshift(`reqId:${reqId}`);
+    const r1IsReq = r1?.method;
+    if (r1IsReq) {
+      const req = r1;
+      const res = r2;
+      const payload = [
+        level.toLocaleUpperCase(),
+        req?.method?.toLocaleUpperCase(),
+        req?.url,
+        ...messages.slice(2),
+      ];
+
+      if (res?.locals?.reqId) {
+        const reqId = res.locals.reqId;
+        payload.unshift(`reqId:${reqId}`);
+      }
+
+      consoleObj[level](...payload);
+      return payload;
     }
 
-    res.locals.console?.[level]?.(...payload);
-    return payload;
-  }
+    const req = r1 as Res;
+    const r1IsRes = req?.locals;
+    if (r1IsRes) {
+      const payload = [level.toLocaleUpperCase(), ...messages.slice(1)];
 
-  const req = r1 as Res;
-  const r1IsRes = req?.locals?.console;
-  if (r1IsRes) {
+      if (req.locals.reqId) {
+        const reqId = req.locals.reqId;
+        payload.unshift(`reqId:${reqId}`);
+      }
+
+      consoleObj[level]?.(...payload);
+      return payload;
+    }
+
     const payload = [level.toLocaleUpperCase(), ...messages];
-
-    if (req.locals.reqId) {
-      const reqId = req.locals.reqId;
-      payload.unshift(`reqId:${reqId}`);
-    }
-
-    req.locals.console?.[level]?.(r2, ...messages);
+    consoleObj[level](payload);
     return payload;
-  }
-
-  messages.unshift(r2);
-  messages.unshift(r1);
-  const payload = [level.toLocaleUpperCase(), ...messages];
-  console[level](...messages);
-  return payload;
+  };
 };
 
-export const setupConslLogging =
-  ({
-    console: cons,
-    addReqId,
-  }: {
-    console?: Cons;
-    addReqId?: boolean;
-  } = {}) =>
-  (_req: Req, res: Res, next: () => void) => {
-    if (addReqId) {
-      res.locals.reqId = crypto.randomUUID();
-    }
-
-    if (cons) {
-      res.locals.console = cons;
-    } else {
-      res.locals.console = console;
-    }
-    next();
+export const setupConslLogging = ({
+  consoleOverride,
+  addReqId,
+}: {
+  consoleOverride?: ConsoleOverride;
+  addReqId?: boolean;
+} = {}): [Consl, express.Handler] => {
+  const consoleObj: Required<ConsoleOverride> = {
+    error: consoleOverride?.error || console.error,
+    log: consoleOverride?.log || console.log,
+    warn: consoleOverride?.warn || console.warn,
+    trace: consoleOverride?.trace || console.trace,
   };
+
+  const consl = initConsl({ consoleObj });
+
+  return [
+    consl,
+    (_req, res, next: () => void) => {
+      if (addReqId) {
+        res.locals.reqId = crypto.randomUUID();
+      }
+
+      res.locals.consl = consl;
+      next();
+    },
+  ];
+};

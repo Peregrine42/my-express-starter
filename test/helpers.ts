@@ -14,7 +14,7 @@ export const setupController = async (
 ): Promise<[RouteClient, Express.Application]> => {
   const [method, path] = routeName.split(" ");
   const controllerUnderTest = new ControllerClass();
-  const server = await getApp({
+  const [server] = await getApp({
     withApp: async (app) => {
       app[method.toLocaleLowerCase() as LowerCaseMethod](path, (req, res) => {
         controllerUnderTest[funcName](req, res);
@@ -23,8 +23,8 @@ export const setupController = async (
   });
 
   return [
-    async (overrides) => {
-      return await inject(server, {
+    (overrides = {}) => {
+      return inject(server, {
         method: method.toLocaleLowerCase() as LowerCaseMethod,
         url: path,
         ...overrides,

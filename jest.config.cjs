@@ -3,6 +3,6 @@ module.exports = {
   roots: ["./dist"],
   testMatch: ["<rootDir>/dist/**/*.test.cjs"],
   collectCoverageFrom: ["!**/_virtual/**"],
-  setupFilesAfterEnv: ["<rootDir>/test/setupTests.js"],
+  setupFilesAfterEnv: ["<rootDir>/dist/setupTests.cjs"],
   collectCoverage: true,
 };

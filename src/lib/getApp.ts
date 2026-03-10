@@ -2,20 +2,32 @@ import express from "express";
 import path from "path";
 import compression from "compression";
 import { errorHandler } from "./errorHandler";
-import { Cons, setupConslLogging } from "./conslLogging";
+import { type ConsoleOverride, setupConslLogging } from "./conslLogging";
+import { env } from "../env";
+import { Server } from "http";
+
+export type ShutdownApp = () => Promise<void>;
+export type StartApp = () => Promise<ShutdownApp>;
 
 export async function getApp({
   withApp = async (_app) => {},
-  console,
+  withAppStartupComplete = async (_app) => async () => {},
+  consoleOverride = console,
   publicPath = path.join(import.meta.dirname, "..", "..", "..", "public"),
 }: {
   withApp?: (_app: express.Application) => Promise<void>;
-  console?: Cons;
+  withAppStartupComplete?: (_app: express.Application) => Promise<ShutdownApp>;
+  consoleOverride?: ConsoleOverride;
   publicPath?: string;
-} = {}) {
+} = {}): Promise<[express.Application, StartApp]> {
   const app = express();
 
-  app.use(setupConslLogging({ addReqId: true, console }));
+  const [consl, conslMiddleware] = setupConslLogging({
+    addReqId: true,
+    consoleOverride,
+  });
+
+  app.use(conslMiddleware);
 
   app.use("/public", compression(), express.static(publicPath));
   app.set("view engine", "pug");
@@ -24,5 +36,35 @@ export async function getApp({
 
   app.use(errorHandler);
 
-  return app;
+  const startup: StartApp = async () => {
+    const server = new Server();
+    const shutdown: ShutdownApp = async () => {
+      server.close();
+    };
+
+    let customShutdown: ShutdownApp = async () => {};
+    try {
+      server.addListener("request", app);
+
+      await new Promise<void>((resolve) => {
+        server.listen(parseInt(env.PORT), async () => {
+          consl(
+            "log",
+            `App is listening at http://localhost:${env.PORT}`,
+          );
+          resolve();
+        });
+      });
+
+      customShutdown = await withAppStartupComplete(app);
+
+      return shutdown;
+    } catch (e) {
+      await customShutdown?.();
+      await shutdown();
+      throw e;
+    }
+  };
+
+  return [app, startup];
 }

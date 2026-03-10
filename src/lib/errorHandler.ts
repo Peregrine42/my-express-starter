@@ -1,5 +1,4 @@
 import type express from "express";
-import { consl } from "./conslLogging";
 
 export const errorHandler: express.ErrorRequestHandler = (
   err,
@@ -7,7 +6,7 @@ export const errorHandler: express.ErrorRequestHandler = (
   res,
   _next,
 ) => {
-  consl("error", req, res, err.stack);
+  res.locals.consl("error", req, res, err.stack);
   const statusCode = 500;
   res.status(statusCode).send("Internal Server Error");
 };

@@ -3,6 +3,7 @@
         "consl",
         "DOTENV",
         "hashless",
+        "millis",
         "pkgroll"
     ]
 }

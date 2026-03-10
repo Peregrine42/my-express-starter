@@ -3,7 +3,7 @@ import { defineConfig } from "tsdown";
 export default defineConfig({
   clean: true,
   platform: "node",
-  entry: ["./test/suite/**/*.ts"],
+  entry: ["./test/suite/**/*.ts", "./test/setupTests.ts"],
   outDir: "./dist/",
   unbundle: true,
   target: "node24",
