@@ -74,7 +74,7 @@ export const initConsl: ({
     }
 
     const payload = [level.toLocaleUpperCase(), ...messages];
-    consoleObj[level](payload);
+    consoleObj[level](payload.join(" "));
     return payload;
   };
 };

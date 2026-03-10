@@ -5,7 +5,7 @@ export default defineConfig({
   platform: "node",
   entry: ["./src/index.ts"],
   target: "node24",
-  format: ["esm"],
+  format: ["commonjs"],
   unbundle: true,
   outputOptions: {
     entryFileNames: "src/[name].js",
