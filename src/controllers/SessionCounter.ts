@@ -11,10 +11,10 @@ export class SessionCounter extends BaseController {
     const redis = new Redis({ keyPrefix: "session:counter:" });
     try {
       if (sessionId) {
-        value = await redis.incr(sessionId);
+        value = Number((await redis.get(sessionId)) || "0");
       } else {
         sessionId = crypto.randomUUID().toString();
-        value = await redis.incr(sessionId);
+        value = Number((await redis.get(sessionId)) || "0");
       }
     } finally {
       redis.disconnect();

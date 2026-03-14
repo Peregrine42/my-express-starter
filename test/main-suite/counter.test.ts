@@ -68,7 +68,41 @@ describe("the counter", () => {
 
     // ASSERT
     expect(resp.statusCode).toEqual(200);
-    expect(resp.body).toContain("+");
+    const documentBody = getHTMLDocumentBody(resp.body);
+    expect(getByTestId(documentBody, "counter-value")).toHaveTextContent("41");
+    expect(resp.cookies).toContainEqual(
+      expect.objectContaining({
+        name: "session",
+        value: "foo",
+        path: "/",
+      }),
+    );
+  });
+
+  it("resets to 0 a missing session", async () => {
+    // ARRANGE
+    const cookieString = new Cookie({
+      value: "foo",
+      key: "session",
+      path: "/",
+    }).cookieString();
+
+    const [dispatch] = await setupController("GET /counter", [
+      SessionCounter,
+      "GET",
+    ]);
+
+    // ACT
+    const resp = await dispatch({
+      headers: {
+        cookie: cookieString,
+      },
+    });
+
+    // ASSERT
+    expect(resp.statusCode).toEqual(200);
+    const documentBody = getHTMLDocumentBody(resp.body);
+    expect(getByTestId(documentBody, "counter-value")).toHaveTextContent("0");
     expect(resp.cookies).toContainEqual(
       expect.objectContaining({
         name: "session",
