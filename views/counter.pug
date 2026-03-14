@@ -1,4 +1,6 @@
 extends ./layout
 block content
+  span(data-testid="counter-value")
+    = value
   form(action="/counter" method="post")
     input(type="submit" value="+")

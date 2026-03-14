@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import express from "express";
 import { setupConslLogging } from "../../../src/lib/conslLogging";
 import inject from "light-my-request";

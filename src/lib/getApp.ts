@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import cookieParser from "cookie-parser";
 import compression from "compression";
 import { errorHandler } from "./errorHandler";
 import { type ConsoleOverride, setupConslLogging } from "./conslLogging";
@@ -33,6 +34,8 @@ export async function getApp({
 
   app.use("/public", compression(), express.static(publicPath));
   app.set("view engine", "pug");
+
+  app.use(cookieParser());
 
   await withApp(app);
 

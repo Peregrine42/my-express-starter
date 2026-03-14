@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import supertest from "supertest";
 import { getApp, ShutdownApp } from "../../../src/lib/getApp";
 import { ConsoleOverride } from "../../../src/lib/conslLogging";
@@ -45,7 +46,9 @@ describe("App", () => {
         withAppStartupComplete: async () => {
           await customStartupCallback();
 
-          return async () => await customShutdownCallback();
+          return async () => {
+            await customShutdownCallback();
+          };
         },
         consoleOverride: {
           log: jest.fn(),

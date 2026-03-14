@@ -1,5 +1,3 @@
-import dotenv from "dotenv";
-dotenv.config();
 import { getRouter } from "./lib/getRouter";
 import { getApp } from "./lib/getApp";
 import { getMyRoutes } from "./getMyRoutes";
