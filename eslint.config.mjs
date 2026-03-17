@@ -9,17 +9,13 @@ export default defineConfig([
   },
   {
     ...eslint.configs.recommended,
-    files: ["**/*.js"],
-  },
-  {
-    ...eslint.configs.recommended,
     languageOptions: {
       sourceType: "commonjs",
       globals: {
         ...globals.node,
       },
     },
-    files: ["**/*.cjs"],
+    files: ["**/*.js"],
   },
   {
     files: ["**/*.ts"],

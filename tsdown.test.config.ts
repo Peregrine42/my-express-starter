@@ -6,7 +6,7 @@ export default defineConfig({
   entry: [
     "./test/main-suite/**/*.ts",
     "./test/e2e-suite/**/*.ts",
-    "./test/setupTests.mts",
+    "./test/setupTests.ts",
   ],
   outDir: "./dist/",
   unbundle: true,
@@ -15,7 +15,6 @@ export default defineConfig({
   sourcemap: "inline",
   deps: {
     skipNodeModulesBundle: true,
-    onlyAllowBundle: false,
   },
   checks: {
     legacyCjs: false,

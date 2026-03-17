@@ -15,7 +15,7 @@ const e2e = {
   transform: {},
 };
 
-export default {
+module.exports = {
   collectCoverage: true,
   projects: [main, e2e],
 };

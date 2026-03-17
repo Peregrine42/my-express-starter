@@ -1,6 +1,5 @@
 {
   "name": "my-app",
-  "type": "module",
   "dependencies": {
     "compression": "1.8.1",
     "cookie-parser": "1.4.7",
@@ -57,9 +56,9 @@
     "frontend:test:watch": "nodemon --config ./nodemon.frontend.json -x npm run frontend:test -- -- ",
     "tsc": "tsc || exit 1",
     "lint": "prettier -w . && eslint",
-    "backend:build": "npm run tsc && tsdown --config ./tsdown.config.mts && npm run lint",
-    "backend:test:build": "npm run tsc && tsdown --config ./tsdown.test.config.mts && npm run lint",
-    "backend:test": "npm run backend:test:build && node --disable-warning=ExperimentalWarning --experimental-vm-modules --env-file=.env ./node_modules/.bin/jest --selectProjects=main --config jest.config.mjs --no-cache",
+    "backend:build": "npm run tsc && tsdown --config ./tsdown.config.ts && npm run lint",
+    "backend:test:build": "npm run tsc && tsdown --config ./tsdown.test.config.ts && npm run lint",
+    "backend:test": "npm run backend:test:build && node --disable-warning=ExperimentalWarning --experimental-vm-modules --env-file=.env ./node_modules/.bin/jest --selectProjects=main --config jest.config.js --no-cache",
     "backend:test:watch": "nodemon -x npm run backend:test -- -- ",
     "backend:build:start": "npm run backend:build && npm start",
     "backend:dev": "nodemon -x npm run backend:build:start -- -- ",
@@ -68,6 +67,6 @@
     "dev": "concurrently npm:frontend:dev npm:backend:dev",
     "test": "npm run backend:test && npm run frontend:test && npm run test:e2e",
     "test:watch": "concurrently npm:backend:test:watch npm:frontend:test:watch",
-    "test:e2e": "npm run backend:test:build && node --env-file=.env ./node_modules/.bin/jest --selectProjects=e2e --config jest.config.mjs --no-cache"
+    "test:e2e": "npm run backend:test:build && node --env-file=.env ./node_modules/.bin/jest --selectProjects=e2e --config jest.config.js --no-cache"
   }
 }
