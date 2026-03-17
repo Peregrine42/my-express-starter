@@ -4,9 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "target": "ES2024",
-    "lib": [
-      "DOM"
-    ],
+    "lib": ["DOM"],
     "jsx": "react-jsx",
     "noImplicitAny": true,
     "noImplicitReturns": true,
@@ -14,6 +12,6 @@
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     "strict": true,
-    "skipLibCheck": true,
-  },
+    "skipLibCheck": true
+  }
 }

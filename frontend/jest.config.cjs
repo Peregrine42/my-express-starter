@@ -10,7 +10,7 @@ module.exports = {
     "!**/coverage/**",
     "!test/**",
     "!src/**",
-    "!*"
+    "!*",
   ],
   setupFilesAfterEnv: ["<rootDir>/test/setupTests.cjs"],
   collectCoverage: true,

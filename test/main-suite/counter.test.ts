@@ -1,6 +1,5 @@
 import { SessionCounter } from "../../src/controllers/SessionCounter";
 import { setupController } from "../helpers";
-import { Window } from "happy-dom";
 import { getByTestId } from "@testing-library/dom";
 import { Cookie } from "tough-cookie";
 import Redis from "ioredis";
@@ -38,7 +37,7 @@ describe("the counter", () => {
     );
   });
 
-  it("renders a value stored in session", async () => {
+  it("renders a value stored in the session", async () => {
     // ARRANGE
     const cookieString = new Cookie({
       value: "foo",
@@ -68,7 +67,7 @@ describe("the counter", () => {
 
     // ASSERT
     expect(resp.statusCode).toEqual(200);
-    const documentBody = getHTMLDocumentBody(resp.body);
+    const documentBody = await getHTMLDocumentBody(resp.body);
     expect(getByTestId(documentBody, "counter-value")).toHaveTextContent("41");
     expect(resp.cookies).toContainEqual(
       expect.objectContaining({
@@ -79,7 +78,7 @@ describe("the counter", () => {
     );
   });
 
-  it("resets to 0 a missing session", async () => {
+  it("resets to 0 when given a missing session", async () => {
     // ARRANGE
     const cookieString = new Cookie({
       value: "foo",
@@ -101,7 +100,7 @@ describe("the counter", () => {
 
     // ASSERT
     expect(resp.statusCode).toEqual(200);
-    const documentBody = getHTMLDocumentBody(resp.body);
+    const documentBody = await getHTMLDocumentBody(resp.body);
     expect(getByTestId(documentBody, "counter-value")).toHaveTextContent("0");
     expect(resp.cookies).toContainEqual(
       expect.objectContaining({
@@ -133,7 +132,7 @@ describe("the counter", () => {
 
     // ASSERT
     expect(resp.statusCode).toEqual(200);
-    const documentBody = getHTMLDocumentBody(resp.body);
+    const documentBody = await getHTMLDocumentBody(resp.body);
     expect(getByTestId(documentBody, "counter-value")).toHaveTextContent("1");
 
     // ACT
@@ -145,12 +144,13 @@ describe("the counter", () => {
 
     // ASSERT
     expect(resp2.statusCode).toEqual(200);
-    const documentBody2 = getHTMLDocumentBody(resp2.body);
+    const documentBody2 = await getHTMLDocumentBody(resp2.body);
     expect(getByTestId(documentBody2, "counter-value")).toHaveTextContent("2");
   });
 });
 
-const getHTMLDocumentBody = (body: string) => {
+const getHTMLDocumentBody = async (body: string) => {
+  const { Window } = await import("happy-dom");
   const window = new Window();
   const document = window.document;
   document.body.innerHTML = body;

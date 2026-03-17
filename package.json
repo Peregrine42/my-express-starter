@@ -1,5 +1,6 @@
 {
   "name": "my-app",
+  "type": "module",
   "dependencies": {
     "compression": "1.8.1",
     "cookie-parser": "1.4.7",
@@ -36,6 +37,7 @@
     "nodemon": "3.1.14",
     "npm-check-updates": "19.6.3",
     "pkgroll": "2.27.0",
+    "prettier": "3.8.1",
     "puppeteer": "24.39.1",
     "supertest": "7.2.2",
     "tsdown": "0.21.2",
@@ -54,17 +56,18 @@
     "frontend:test": "cd frontend/ && npm test",
     "frontend:test:watch": "nodemon --config ./nodemon.frontend.json -x npm run frontend:test -- -- ",
     "tsc": "tsc || exit 1",
-    "backend:build": "npm run tsc && tsdown --config ./tsdown.config.mts && eslint",
-    "backend:test:build": "npm run tsc && tsdown --config ./tsdown.test.config.mts && eslint",
-    "backend:test": "npm run backend:test:build && node --disable-warning=ExperimentalWarning --experimental-vm-modules --env-file=.env ./node_modules/.bin/jest --selectProjects=main --config jest.config.cjs --no-cache",
+    "lint": "prettier -w . && eslint",
+    "backend:build": "npm run tsc && tsdown --config ./tsdown.config.mts && npm run lint",
+    "backend:test:build": "npm run tsc && tsdown --config ./tsdown.test.config.mts && npm run lint",
+    "backend:test": "npm run backend:test:build && node --disable-warning=ExperimentalWarning --experimental-vm-modules --env-file=.env ./node_modules/.bin/jest --selectProjects=main --config jest.config.mjs --no-cache",
     "backend:test:watch": "nodemon -x npm run backend:test -- -- ",
     "backend:build:start": "npm run backend:build && npm start",
     "backend:dev": "nodemon -x npm run backend:build:start -- -- ",
     "build": "npm run backend:build && npm run frontend:build",
     "start": "node --env-file=.env dist/src/index.js",
     "dev": "concurrently npm:frontend:dev npm:backend:dev",
-    "test": "npm run backend:test && npm run frontend:test",
+    "test": "npm run backend:test && npm run frontend:test && npm run test:e2e",
     "test:watch": "concurrently npm:backend:test:watch npm:frontend:test:watch",
-    "test:e2e": "npm run backend:test:build && node --env-file=.env ./node_modules/.bin/jest --selectProjects=e2e --config jest.config.cjs --no-cache"
+    "test:e2e": "npm run backend:test:build && node --env-file=.env ./node_modules/.bin/jest --selectProjects=e2e --config jest.config.mjs --no-cache"
   }
 }
