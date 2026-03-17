@@ -1,7 +1,10 @@
 const main = {
   displayName: "main",
   testMatch: ["<rootDir>/dist/main-suite/**/*.test.cjs"],
-  coveragePathIgnorePatterns: ["node_modules"],
+  coveragePathIgnorePatterns: [
+    "node_modules",
+    "<rootDir>/dist/_virtual/_rolldown/runtime.mjs",
+  ],
   setupFilesAfterEnv: ["<rootDir>/dist/setupTests.cjs"],
   transform: {},
 };

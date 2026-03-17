@@ -19,8 +19,8 @@
   },
   "scripts": {
     "tsc": "tsc || exit 1",
-    "build": "npm run tsc && tsdown -t chrome58 -t firefox57 -t safari11 -t edge16",
+    "build": "npm run tsc && tsdown -c ./tsdown.config.mts -t chrome58 -t firefox57 -t safari11 -t edge16",
     "start": "npm run build",
-    "test": "tsdown -c ./tsdown.test.config.ts && node --disable-warning=ExperimentalWarning --env-file=../.env ../node_modules/.bin/jest --config jest.config.js --no-cache"
+    "test": "tsdown -c ./tsdown.test.config.mts && node --disable-warning=ExperimentalWarning --env-file=../.env ../node_modules/.bin/jest --config jest.config.js --no-cache"
   }
 }
