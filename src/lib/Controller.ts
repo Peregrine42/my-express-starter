@@ -1,42 +1,69 @@
 import express from "express";
 
-function notFound(_req: express.Request, res: express.Response) {
-  res.status(404).send("");
+export function isRes(
+  res: Partial<typeof express.response> | typeof express.response,
+): res is typeof express.response {
+  if (res.status === express.response.status) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+export function isReq(
+  req: Partial<typeof express.request> | typeof express.request,
+): req is typeof express.request {
+  if (req.headers === express.request.headers) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function notFound(
+  _req: Partial<typeof express.request>,
+  res: Partial<typeof express.response>,
+) {
+  if (isRes(res)) {
+    res.status(404).send("");
+  } else {
+    throw new Error("");
+  }
 }
 
 export abstract class Controller {
   abstract GET(
-    req: express.Request,
-    res: express.Response,
-  ): Promise<void> | void;
+    req: Partial<typeof express.request>,
+    res: Partial<typeof express.response>,
+  ): Promise<void>;
   abstract POST(
-    req: express.Request,
-    res: express.Response,
-  ): Promise<void> | void;
+    req: Partial<typeof express.request>,
+    res: Partial<typeof express.response>,
+  ): Promise<void>;
   abstract FALLBACK(
-    req: express.Request,
-    res: express.Response,
-  ): Promise<void> | void;
+    req: Partial<typeof express.request>,
+    res: Partial<typeof express.response>,
+  ): Promise<void>;
   abstract HEAD(
-    req: express.Request,
-    res: express.Response,
-  ): Promise<void> | void;
+    req: Partial<typeof express.request>,
+    res: Partial<typeof express.response>,
+  ): Promise<void>;
   abstract OPTIONS(
-    req: express.Request,
-    res: express.Response,
-  ): Promise<void> | void;
+    req: Partial<typeof express.request>,
+    res: Partial<typeof express.response>,
+  ): Promise<void>;
   abstract PUT(
-    req: express.Request,
-    res: express.Response,
-  ): Promise<void> | void;
+    req: Partial<typeof express.request>,
+    res: Partial<typeof express.response>,
+  ): Promise<void>;
   abstract PATCH(
-    req: express.Request,
-    res: express.Response,
-  ): Promise<void> | void;
+    req: Partial<typeof express.request>,
+    res: Partial<typeof express.response>,
+  ): Promise<void>;
   abstract DELETE(
-    req: express.Request,
-    res: express.Response,
-  ): Promise<void> | void;
+    req: Partial<typeof express.request>,
+    res: Partial<typeof express.response>,
+  ): Promise<void>;
 }
 
 export class BaseController extends Controller {
@@ -44,28 +71,37 @@ export class BaseController extends Controller {
     super();
   }
 
-  GET = (req: express.Request, res: express.Response) => {
+  GET = async (req: typeof express.request, res: typeof express.response) => {
     return this.FALLBACK(req, res);
   };
-  POST = (req: express.Request, res: express.Response) => {
+  POST = async (req: typeof express.request, res: typeof express.response) => {
     return this.FALLBACK(req, res);
   };
-  HEAD = (req: express.Request, res: express.Response) => {
+  HEAD = async (req: typeof express.request, res: typeof express.response) => {
     return this.FALLBACK(req, res);
   };
-  OPTIONS = (req: express.Request, res: express.Response) => {
+  OPTIONS = async (
+    req: typeof express.request,
+    res: typeof express.response,
+  ) => {
     return this.FALLBACK(req, res);
   };
-  PUT = (req: express.Request, res: express.Response) => {
+  PUT = async (req: typeof express.request, res: typeof express.response) => {
     return this.FALLBACK(req, res);
   };
-  PATCH = (req: express.Request, res: express.Response) => {
+  PATCH = async (req: typeof express.request, res: typeof express.response) => {
     return this.FALLBACK(req, res);
   };
-  DELETE = (req: express.Request, res: express.Response) => {
+  DELETE = async (
+    req: typeof express.request,
+    res: typeof express.response,
+  ) => {
     return this.FALLBACK(req, res);
   };
-  FALLBACK = (req: express.Request, res: express.Response) => {
+  FALLBACK = async (
+    req: typeof express.request,
+    res: typeof express.response,
+  ) => {
     return notFound(req, res);
   };
 }

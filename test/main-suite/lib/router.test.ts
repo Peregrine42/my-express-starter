@@ -62,7 +62,7 @@ describe("when a handler is not defined", () => {
     const router = Router();
 
     class CustomController extends BaseController {
-      GET = (_req: express.Request, res: express.Response): void => {
+      GET = async (_req: express.Request, res: express.Response) => {
         res.status(404).send("Not found!");
       };
     }

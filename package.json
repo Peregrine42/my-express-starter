@@ -28,7 +28,6 @@
     "concurrently": "9.2.1",
     "eslint": "10.0.3",
     "globals": "17.4.0",
-    "happy-dom": "20.8.4",
     "jest": "30.3.0",
     "jest-puppeteer": "11.0.0",
     "jsdom": "28.1.0",
@@ -45,7 +44,7 @@
   },
   "overrides": {
     "yauzl": "3.2.1",
-    "flatted": "3.4.0"
+    "flatted": "3.4.2"
   },
   "scripts": {
     "frontend:install": "cd frontend/ && npm i -- ",
@@ -58,15 +57,15 @@
     "lint": "prettier -w . && eslint",
     "backend:build": "npm run tsc && tsdown --config ./tsdown.config.mts && npm run lint",
     "backend:test:build": "npm run tsc && tsdown --config ./tsdown.test.config.mts && npm run lint",
-    "backend:test": "npm run backend:test:build && node --disable-warning=ExperimentalWarning --experimental-vm-modules --env-file=.env ./node_modules/.bin/jest --selectProjects=main --config jest.config.js --no-cache",
+    "backend:test": "npm run backend:test:build && node --enable-source-maps --disable-warning=ExperimentalWarning --experimental-vm-modules --env-file=.env ./node_modules/.bin/jest --selectProjects=main --config jest.config.js --no-cache",
     "backend:test:watch": "nodemon -x npm run backend:test -- -- ",
     "backend:build:start": "npm run backend:build && npm start",
     "backend:dev": "nodemon -x npm run backend:build:start -- -- ",
     "build": "npm run backend:build && npm run frontend:build",
-    "start": "node --env-file=.env dist/src/index.js",
+    "start": "node --enable-source-maps --env-file=.env dist/src/index.js",
     "dev": "concurrently npm:frontend:dev npm:backend:dev",
     "test": "npm run backend:test && npm run frontend:test && npm run test:e2e",
     "test:watch": "concurrently npm:backend:test:watch npm:frontend:test:watch",
-    "test:e2e": "npm run backend:test:build && node --env-file=.env ./node_modules/.bin/jest --selectProjects=e2e --config jest.config.js --no-cache"
+    "test:e2e": "npm run backend:test:build && node --enable-source-maps --env-file=.env ./node_modules/.bin/jest --selectProjects=e2e --config jest.config.js --no-cache"
   }
 }

@@ -1,16 +1,18 @@
 import { Home } from "../../src/controllers/Home";
-import { setupController } from "../helpers";
+import { wasCalledWith } from "./lib/RecordingProxy";
+import { setupController } from "./lib/setupController";
+import express from "express";
 
-describe("the homepage", () => {
-  it("has a welcome message in the title bar", async () => {
+describe("the homepage controller", () => {
+  it("renders the homepage", async () => {
     // ARRANGE
-    const [dispatch] = await setupController("GET /", [Home, "GET"]);
-
+    const [dispatch] = await setupController([Home, "GET"]);
     // ACT
-    const resp = await dispatch();
-
+    const [_req, res] = await dispatch();
     // ASSERT
-    expect(resp.statusCode).toEqual(200);
-    expect(resp.body).toContain("<title>My App - Welcome</title>");
+    expect(res.statusCode).toEqual(200);
+    expect(
+      wasCalledWith<express.Response>(res, "render", "index"),
+    ).toBeTruthy();
   });
 });

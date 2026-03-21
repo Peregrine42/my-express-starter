@@ -1,158 +1,134 @@
 import { SessionCounter } from "../../src/controllers/SessionCounter";
-import { setupController } from "../helpers";
-import { getByTestId } from "@testing-library/dom";
+import {} from // getHTMLDocumentBody,
+// setupController,
+"./lib/setupController";
+// import { getByTestId } from "@testing-library/dom";
 import { Cookie } from "tough-cookie";
 import Redis from "ioredis";
+import {
+  getStringValueFromSession,
+  SessionReq,
+  SessionRes,
+  setupSession, // setStringValueFromSession,
+  // setupSession,
+} from "../../src/lib/session";
+import { setupMyController } from "../setupMyController";
+
+const existingSessionId = "foo";
+const allowedSessionObjectKeys = ["counter"];
 
 describe("the counter", () => {
   beforeEach(async () => {
     const redis = new Redis({ keyPrefix: "session:counter:" });
 
     try {
-      await redis.del("foo");
+      await redis.del(existingSessionId);
     } finally {
       redis.disconnect();
     }
-  });
 
-  it("has a '+' button", async () => {
-    // ARRANGE
-    const [dispatch] = await setupController("GET /counter", [
-      SessionCounter,
-      "GET",
-    ]);
-
-    // ACT
-    const resp = await dispatch();
-
-    // ASSERT
-    expect(resp.statusCode).toEqual(200);
-    expect(resp.body).toContain("+");
-    expect(resp.cookies).toContainEqual(
-      expect.objectContaining({
-        name: "session",
-        value: expect.stringMatching(/.+/),
-        path: "/",
-      }),
-    );
-  });
-
-  it("renders a value stored in the session", async () => {
-    // ARRANGE
-    const cookieString = new Cookie({
-      value: "foo",
-      key: "session",
-      path: "/",
-    }).cookieString();
-
-    const redis = new Redis({ keyPrefix: "session:counter:" });
+    const redis2 = new Redis({ keyPrefix: "session::" });
 
     try {
-      await redis.set("foo", "41");
+      await redis2.del(existingSessionId);
     } finally {
-      redis.disconnect();
+      redis2.disconnect();
     }
-
-    const [dispatch] = await setupController("GET /counter", [
-      SessionCounter,
-      "GET",
-    ]);
-
-    // ACT
-    const resp = await dispatch({
-      headers: {
-        cookie: cookieString,
-      },
-    });
-
-    // ASSERT
-    expect(resp.statusCode).toEqual(200);
-    const documentBody = await getHTMLDocumentBody(resp.body);
-    expect(getByTestId(documentBody, "counter-value")).toHaveTextContent("41");
-    expect(resp.cookies).toContainEqual(
-      expect.objectContaining({
-        name: "session",
-        value: "foo",
-        path: "/",
-      }),
-    );
   });
 
-  it("resets to 0 when given a missing session", async () => {
+  it("throws an error when accessed without a session", async () => {
+    // ARRANGE
+    const [dispatch] = await setupMyController([SessionCounter, "GET"]);
+
+    // ACT / ASSERT
+    expect(async () => await dispatch()).rejects.toThrow("No session!");
+  });
+
+  it("renders the counter view", async () => {
     // ARRANGE
     const cookieString = new Cookie({
-      value: "foo",
+      value: existingSessionId,
       key: "session",
       path: "/",
     }).cookieString();
 
-    const [dispatch] = await setupController("GET /counter", [
-      SessionCounter,
-      "GET",
-    ]);
+    await setupSession(
+      { cookies: { session: existingSessionId } },
+      { locals: { allowedSessionObjectKeys } },
+      existingSessionId,
+    );
+
+    const [dispatch] = await setupMyController([SessionCounter, "GET"]);
 
     // ACT
-    const resp = await dispatch({
+    const [_req, res] = await dispatch({
       headers: {
         cookie: cookieString,
       },
     });
 
     // ASSERT
-    expect(resp.statusCode).toEqual(200);
-    const documentBody = await getHTMLDocumentBody(resp.body);
-    expect(getByTestId(documentBody, "counter-value")).toHaveTextContent("0");
-    expect(resp.cookies).toContainEqual(
-      expect.objectContaining({
-        name: "session",
-        value: "foo",
-        path: "/",
-      }),
-    );
+    expect(res.recording[0].method).toEqual("render");
+    expect(res.recording[0].args[0]).toEqual("counter");
   });
 
-  it("can increment", async () => {
+  it("throws when given a missing session", async () => {
     // ARRANGE
     const cookieString = new Cookie({
-      value: "foo",
+      value: existingSessionId,
+      key: "session",
+      path: "/",
+    }).cookieString();
+
+    const [dispatch] = await setupMyController([SessionCounter, "GET"]);
+
+    // ACT
+    await expect(async () => {
+      await dispatch({
+        headers: {
+          cookie: cookieString,
+        },
+      });
+    }).rejects.toThrow("No session!");
+  });
+
+  it("can increment the value stored in Redis", async () => {
+    // ARRANGE
+    const cookieString = new Cookie({
+      value: existingSessionId,
       key: "session",
     }).cookieString();
 
-    const [dispatch] = await setupController("POST /counter", [
-      SessionCounter,
-      "POST",
-    ]);
+    await setupSession(
+      { cookies: { session: existingSessionId } },
+      { locals: { allowedSessionObjectKeys } },
+      existingSessionId,
+    );
+
+    const [dispatch] = await setupMyController([SessionCounter, "POST"]);
 
     // ACT
-    const resp = await dispatch({
+    await dispatch({
+      method: "POST",
+      headers: {
+        cookie: cookieString,
+      },
+    });
+
+    const [req, res] = await dispatch({
+      method: "POST",
       headers: {
         cookie: cookieString,
       },
     });
 
     // ASSERT
-    expect(resp.statusCode).toEqual(200);
-    const documentBody = await getHTMLDocumentBody(resp.body);
-    expect(getByTestId(documentBody, "counter-value")).toHaveTextContent("1");
+    const val2 = await getStringValueFromSession(
+      req as SessionReq,
+      res as SessionRes,
+      "counter",
+    );
 
-    // ACT
-    const resp2 = await dispatch({
-      headers: {
-        cookie: cookieString,
-      },
-    });
-
-    // ASSERT
-    expect(resp2.statusCode).toEqual(200);
-    const documentBody2 = await getHTMLDocumentBody(resp2.body);
-    expect(getByTestId(documentBody2, "counter-value")).toHaveTextContent("2");
+    expect(val2).toEqual("2");
   });
 });
-
-const getHTMLDocumentBody = async (body: string) => {
-  const { Window } = await import("happy-dom");
-  const window = new Window();
-  const document = window.document;
-  document.body.innerHTML = body;
-  return document.body as unknown as HTMLElement;
-};

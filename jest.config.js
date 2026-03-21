@@ -3,7 +3,7 @@ const main = {
   testMatch: ["<rootDir>/dist/main-suite/**/*.test.cjs"],
   coveragePathIgnorePatterns: [
     "node_modules",
-    "<rootDir>/dist/_virtual/_rolldown/runtime.mjs",
+    "<rootDir>/dist/_virtual/_rolldown/runtime.cjs",
   ],
   setupFilesAfterEnv: ["<rootDir>/dist/setupTests.cjs"],
   transform: {},

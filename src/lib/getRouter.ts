@@ -26,7 +26,10 @@ export function configureAndAttachRoutes(
       (req, res, next) => {
         (async () => {
           await controller[funcName](req, res);
-        })().catch(next);
+        })().catch((e) => {
+          console.error(e);
+          next(e);
+        });
       },
     );
   }
@@ -34,9 +37,23 @@ export function configureAndAttachRoutes(
   if (routesConfig["404"]) {
     const [ControllerClass, funcName] = routesConfig["404"];
     const controller = new ControllerClass();
-    targetRouter.all("{*splat}", controller[funcName]);
+    targetRouter.all("{*splat}", (req, res, next) => {
+      (async () => {
+        await controller[funcName](req, res);
+      })().catch((e) => {
+        console.error(e);
+        next(e);
+      });
+    });
   } else {
-    targetRouter.all("{*splat}", new BaseController().FALLBACK);
+    targetRouter.all("{*splat}", (req, res, next) => {
+      (async () => {
+        await new BaseController().FALLBACK(req, res);
+      })().catch((e) => {
+        console.error(e);
+        next(e);
+      });
+    });
   }
 }
 
