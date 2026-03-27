@@ -5,3 +5,5 @@ public/pages
 .DS_Store
 coverage
 tmp-local-storage*
+.memory/branches/*/log.md
+.memory/state.yaml

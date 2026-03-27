@@ -1,0 +1,66 @@
+# main
+
+**Purpose:** Main project memory branch
+
+---
+
+## Commit 276320dc | 2026-03-27T11:15:54.260Z
+
+### Branch Purpose
+
+The main branch tracks ongoing project memory, capturing key decisions and progress milestones for the full-stack Express 5 + React 19 application.
+
+### Previous Progress Summary
+
+Initial commit.
+
+### This Commit's Contribution
+
+- Initialized Brain memory system with branch structure and protocol documentation
+- Oriented on existing codebase: Express 5 backend with Pug templates, React 19 frontend, Redis-backed sessions
+- Documented current state: two routes (Home, SessionCounter), full test suite (unit, frontend, E2E), all green
+- Captured key architectural decisions: tsdown bundler, controller-base routing, Redis session key prefixing
+- Wrote initial roadmap to `.memory/main.md` covering project purpose, completed milestones, and planned work
+- Resolved subagent model configuration by switching from `google-antigravity` to `zai` provider for commit distillation
+
+---
+
+## Commit d0995af7 | 2026-03-27T11:33:11.924Z
+
+### Branch Purpose
+
+Main project memory branch tracking ongoing development of the Express 5 + React 19 full-stack web application.
+
+### Previous Progress Summary
+
+Brain was initialized with project orientation documenting the Express 5 backend with Pug templates, React 19 frontend, and Redis-backed sessions. The app had two routes (Home and SessionCounter with increment), a full test suite (unit, frontend, E2E) passing, and key architectural decisions captured (tsdown bundler, controller-base routing, Redis session key prefixing). Initial roadmap was written to `.memory/main.md`.
+
+### This Commit's Contribution
+
+- Implemented decrement counter functionality using the method-override pattern (HTML forms POST with `_method=delete` hidden field, middleware rewrites to DELETE before routing)
+- Added `decrementNumericStringValueFromSession` helper using Redis's `decr` command, mirrored the existing increment pattern
+- Extended router type system to support DELETE methods beyond GET/POST
+- Wired middleware in critical order: `cookieParser` → `sessionSetupMiddleware` → `express.urlencoded` (body parser for method-override) → `methodOverride` → router
+- Simplified unit test to directly test the DELETE handler rather than the POST→override flow (method-override is well-tested; controller logic is the responsibility)
+- Documented middleware order and method-override pattern in AGENTS.md to prevent future breakage when adding non-GET/POST routes
+
+---
+
+## Commit 40d1d1b7 | 2026-03-27T12:02:16.537Z
+
+### Branch Purpose
+
+Main project memory branch tracking ongoing development of the Express 5 + React 19 full-stack web application.
+
+### Previous Progress Summary
+
+Brain was initialized with project orientation documenting the Express 5 backend with Pug templates, React 19 frontend, and Redis-backed sessions. The app had two routes (Home and SessionCounter), a full test suite passing. A previous commit implemented decrement counter functionality using the method-override pattern with middleware wired as `cookieParser` → `sessionSetupMiddleware` → `express.urlencoded` → `methodOverride` → router. The method-override pattern uses HTML forms POST with `_method=delete` hidden field, and unit tests dispatch actual HTTP methods directly rather than testing the POST→override flow.
+
+### This Commit's Contribution
+
+- Discovered and fixed critical bug: `methodOverride("_method")` reads from the query string, not `req.body` — switched to function getter `methodOverride((req) => req.body?._method)` to read from form body
+- Extracted server lifecycle from individual E2E test files into shared `globalSetup.ts` that composes jest-puppeteer's browser launch with the app server startup, resolving EADDRINUSE conflicts when multiple E2E test files run
+- Added session seeding in `globalSetup` (Redis key `session::<sessionId>`) and cookie setting via `page.setCookie()` in test `beforeAll` to authenticate E2E requests
+- Slimmed down E2E test files to pure test logic without server management code
+- Added `--forceExit` flag to E2E test command to prevent process hanging
+- Updated AGENTS.md with the method-override gotcha (string arg vs function getter) and E2E test patterns (globalSetup composition, session seeding, cookie management)

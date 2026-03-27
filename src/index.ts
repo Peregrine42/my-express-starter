@@ -1,3 +1,5 @@
+import express from "express";
+import methodOverride from "method-override";
 import { getRouter } from "./lib/getRouter";
 import { getApp } from "./lib/getApp";
 import { getMyRoutes } from "./getMyRoutes";
@@ -24,11 +26,14 @@ declare global {
         "/",
         sessionSetupMiddleware({ allowedSessionObjectKeys: ["counter"] }),
       );
+      app.use(express.urlencoded({ extended: false }));
+      app.use(methodOverride((req) => req.body?._method));
       app.use("/", myRouter);
     },
   });
 
   await startApp();
+  console.log("🚀 Server launched — happy coding!");
 })().catch((e) => {
   process.exitCode = 1;
   console.error(e);

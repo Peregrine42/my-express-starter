@@ -1,4 +1,5 @@
 import express from "express";
+import methodOverride from "method-override";
 import { sessionSetupMiddleware } from "../src/lib/session";
 import { BaseController } from "../src/lib/Controller";
 import { Method } from "../src/lib/getRouter";
@@ -14,6 +15,8 @@ export const setupMyController = async (
         "/",
         sessionSetupMiddleware({ allowedSessionObjectKeys: ["counter"] }),
       );
+      app.use(express.urlencoded({ extended: false }));
+      app.use(methodOverride((req) => req.body?._method));
 
       await withApp(app);
     },

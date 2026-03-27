@@ -2,9 +2,9 @@ import { Router } from "express";
 import { BaseController } from "./Controller";
 import _ from "lodash";
 
-export type Method = "GET" | "POST";
+export type Method = "GET" | "POST" | "DELETE";
 export type RoutesConfig = Record<string, [typeof BaseController, Method]>;
-export type LowerCaseMethod = "get" | "post";
+export type LowerCaseMethod = "get" | "post" | "delete";
 export const reservedRoutes = ["404"];
 
 function buildRoutesKey(key: string): [Method, string] {

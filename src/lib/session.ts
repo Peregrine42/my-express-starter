@@ -94,6 +94,32 @@ Allowed keys: ${allowedSessionObjectKeys.join(", ")}
   }
 }
 
+export async function decrementNumericStringValueFromSession(
+  { cookies: { session: sessionId } = {} }: SessionReq,
+  { locals: { allowedSessionObjectKeys } }: SessionRes,
+  key: string,
+): Promise<string> {
+  if (!allowedSessionObjectKeys.includes(key)) {
+    throw new Error(
+      `
+Invalid session object key! '${key}'
+Allowed keys: ${allowedSessionObjectKeys.join(", ")}
+`.trim(),
+    );
+  }
+
+  if (sessionId) {
+    const redis = new Redis({ keyPrefix: `session:${key}:` });
+    try {
+      return (await redis.decr(sessionId)).toString();
+    } finally {
+      redis.disconnect();
+    }
+  } else {
+    throw new Error("No session!");
+  }
+}
+
 export type SessionOpts = {
   allowedSessionObjectKeys: string[];
 };

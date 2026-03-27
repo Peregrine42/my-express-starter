@@ -7,10 +7,12 @@
     "express-session": "1.19.0",
     "ioredis": "5.10.0",
     "lodash": "4.17.23",
+    "method-override": "3.0.0",
     "pug": "3.0.4"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@mariozechner/pi-coding-agent": "0.63.1",
     "@testing-library/dom": "10.4.1",
     "@testing-library/jest-dom": "6.9.1",
     "@types/axios": "0.14.4",
@@ -21,6 +23,7 @@
     "@types/jest": "30.0.0",
     "@types/jsdom": "28.0.0",
     "@types/lodash": "4.17.24",
+    "@types/method-override": "3.0.0",
     "@types/node": "25.5.0",
     "@types/redis": "4.0.11",
     "@types/supertest": "7.2.0",
@@ -66,6 +69,6 @@
     "dev": "concurrently npm:frontend:dev npm:backend:dev",
     "test": "npm run backend:test && npm run frontend:test && npm run test:e2e",
     "test:watch": "concurrently npm:backend:test:watch npm:frontend:test:watch",
-    "test:e2e": "npm run backend:test:build && node --enable-source-maps --env-file=.env ./node_modules/.bin/jest --selectProjects=e2e --config jest.config.js --no-cache"
+    "test:e2e": "npm run backend:test:build && node --enable-source-maps --env-file=.env ./node_modules/.bin/jest --selectProjects=e2e --config jest.config.js --no-cache --forceExit"
   }
 }

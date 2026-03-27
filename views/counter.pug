@@ -4,3 +4,6 @@ block content
     = value
   form(action="/counter" method="post")
     input(type="submit" value="+")
+  form(action="/counter" method="post")
+    input(type="hidden" name="_method" value="delete")
+    input(type="submit" value="−")

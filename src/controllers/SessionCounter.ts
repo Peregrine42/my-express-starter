@@ -3,6 +3,7 @@ import { BaseController } from "../lib/Controller";
 import {
   getStringValueFromSession,
   incrementNumericStringValueFromSession,
+  decrementNumericStringValueFromSession,
 } from "../lib/session";
 
 export class SessionCounter extends BaseController {
@@ -15,6 +16,15 @@ export class SessionCounter extends BaseController {
 
   POST = async (req: express.Request, res: express.Response) => {
     const value = await incrementNumericStringValueFromSession(
+      req,
+      res,
+      "counter",
+    );
+    res.render("counter", { value });
+  };
+
+  DELETE = async (req: express.Request, res: express.Response) => {
+    const value = await decrementNumericStringValueFromSession(
       req,
       res,
       "counter",

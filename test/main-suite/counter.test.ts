@@ -131,4 +131,44 @@ describe("the counter", () => {
 
     expect(val2).toEqual("2");
   });
+
+  it("can decrement the value stored in Redis", async () => {
+    // ARRANGE
+    const cookieString = new Cookie({
+      value: existingSessionId,
+      key: "session",
+    }).cookieString();
+
+    await setupSession(
+      { cookies: { session: existingSessionId } },
+      { locals: { allowedSessionObjectKeys } },
+      existingSessionId,
+    );
+
+    const [dispatch] = await setupMyController([SessionCounter, "DELETE"]);
+
+    // ACT
+    await dispatch({
+      method: "DELETE",
+      headers: {
+        cookie: cookieString,
+      },
+    });
+
+    const [req, res] = await dispatch({
+      method: "DELETE",
+      headers: {
+        cookie: cookieString,
+      },
+    });
+
+    // ASSERT
+    const val = await getStringValueFromSession(
+      req as SessionReq,
+      res as SessionRes,
+      "counter",
+    );
+
+    expect(val).toEqual("-2");
+  });
 });

@@ -7,6 +7,7 @@ export function getMyRoutes() {
     "GET /": [Home, "GET"],
     "GET /counter": [SessionCounter, "GET"],
     "POST /counter": [SessionCounter, "POST"],
+    "DELETE /counter": [SessionCounter, "DELETE"],
   };
 
   return routes;
