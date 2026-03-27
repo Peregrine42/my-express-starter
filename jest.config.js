@@ -13,6 +13,7 @@ const e2e = {
   displayName: "e2e",
   preset: "jest-puppeteer",
   globalSetup: "<rootDir>/dist/e2e-suite/globalSetup.cjs",
+  globalTeardown: "<rootDir>/dist/e2e-suite/globalTeardown.cjs",
   testMatch: ["<rootDir>/dist/e2e-suite/**/*.test.cjs"],
   coveragePathIgnorePatterns: [".*"],
   setupFilesAfterEnv: ["<rootDir>/dist/setupTests.cjs"],

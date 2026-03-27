@@ -9,10 +9,10 @@ const getCounterValue = async () =>
 describe("counter e2e", (): void => {
   beforeAll(async () => {
     // Set the session cookie so the counter page can authenticate
-    await page.setCookie({
+    await browser.setCookie({
       name: "session",
       value: E2E_SESSION_ID,
-      domain: process.env.COOKIE_DOMAIN,
+      domain: process.env.COOKIE_DOMAIN || "localhost",
       path: "/",
     });
   });

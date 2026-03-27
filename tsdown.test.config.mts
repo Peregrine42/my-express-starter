@@ -2,6 +2,9 @@ import { defineConfig } from "tsdown";
 
 export default defineConfig({
   clean: true,
+  outputOptions: {
+    exports: "named",
+  },
   platform: "node",
   entry: [
     "./test/main-suite/**/*.ts",

@@ -84,11 +84,13 @@ Allowed keys: ${allowedSessionObjectKeys.join(", ")}
 
   if (sessionId) {
     const redis = new Redis({ keyPrefix: `session:${key}:` });
+    let result;
     try {
-      return (await redis.incr(sessionId)).toString();
+      result = (await redis.incr(sessionId)).toString();
     } finally {
       redis.disconnect();
     }
+    return result;
   } else {
     throw new Error("No session!");
   }

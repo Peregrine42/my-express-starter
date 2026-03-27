@@ -69,6 +69,6 @@
     "dev": "concurrently npm:frontend:dev npm:backend:dev",
     "test": "npm run backend:test && npm run frontend:test && npm run test:e2e",
     "test:watch": "concurrently npm:backend:test:watch npm:frontend:test:watch",
-    "test:e2e": "npm run backend:test:build && node --enable-source-maps --env-file=.env ./node_modules/.bin/jest --selectProjects=e2e --config jest.config.js --no-cache --forceExit"
+    "test:e2e": "npm run backend:test:build && node --enable-source-maps --env-file=.env ./node_modules/.bin/jest --selectProjects=e2e --config jest.config.js --no-cache"
   }
 }
