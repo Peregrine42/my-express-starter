@@ -1,5 +1,3 @@
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 export interface RecordingEntry {
   /** The property name / method that was called */
   method: string;
@@ -13,13 +11,11 @@ export interface RecordingEntry {
 
 /**
  * The proxy surface: looks exactly like T (so autocomplete works),
- * plus a `recording` array you can inspect in tests.
+ * plus a `recording` array.
  */
 export type RecordedObject<T extends object> = T & {
   readonly recording: RecordingEntry[];
 };
-
-// ─── Implementation ──────────────────────────────────────────────────────────
 
 export function createRecordingProxy<T extends object>(
   target: T,
@@ -28,7 +24,6 @@ export function createRecordingProxy<T extends object>(
 
   const handler: ProxyHandler<T> = {
     get(_target, prop, receiver) {
-      // ── Internal / introspection keys ──────────────────────────────
       if (prop === "recording") return recording;
 
       const value = Reflect.get(target, prop, target);

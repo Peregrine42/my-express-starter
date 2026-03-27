@@ -2,6 +2,7 @@ import crypto from "crypto";
 import Redis from "ioredis";
 import express from "express";
 
+/* istanbul ignore next */
 export function generateSessionId() {
   return crypto.randomUUID().toString();
 }
