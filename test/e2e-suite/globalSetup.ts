@@ -1,10 +1,6 @@
-import express from "express";
 import Redis from "ioredis";
 import { getApp, ShutdownApp } from "../../src/lib/getApp";
-import { getMyRoutes } from "../../src/getMyRoutes";
-import { getRouter } from "../../src/lib/getRouter";
-import { sessionSetupMiddleware } from "../../src/lib/session";
-import methodOverride from "method-override";
+import { attachAppMiddleware } from "../../src/lib/attachMiddleware";
 
 export const E2E_SESSION_ID = "e2e-test-session";
 
@@ -33,17 +29,12 @@ export default async function globalSetup(jestConfig: {
     counterRedis.disconnect();
   }
   // Start the app server
-  const routes = getMyRoutes();
-  const myRouter = await getRouter(routes);
   const [app, appStartup] = await getApp({
     consoleOverride: {
       log: () => {},
     },
   });
-  app.use(sessionSetupMiddleware({ allowedSessionObjectKeys: ["counter"] }));
-  app.use(express.urlencoded({ extended: false }));
-  app.use(methodOverride((req) => req.body?._method));
-  app.use(myRouter);
+  await attachAppMiddleware(app);
   global.appShutdown = await appStartup();
 
   // Launch the browser via jest-puppeteer's setup

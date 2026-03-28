@@ -12,7 +12,7 @@ export type StartApp = () => Promise<ShutdownApp>;
 
 export async function getApp({
   withApp = async (_app) => {},
-  withAppStartupComplete = async (_app) => async () => {},
+  withAppStartupComplete = async (_app) => {return async () => {};},
   beforeAppStartup = async (_app) => {},
   consoleOverride = console,
   publicPath = path.join(import.meta.dirname, "..", "..", "..", "public"),

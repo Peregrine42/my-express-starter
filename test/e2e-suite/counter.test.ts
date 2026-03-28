@@ -4,7 +4,7 @@ import { env } from "../../src/env";
 import { E2E_SESSION_ID } from "./globalSetup";
 
 const getCounterValue = async () =>
-  page.$eval('[data-testid="counter-value"]', (el) => el.textContent ?? "");
+  {return page.$eval('[data-testid="counter-value"]', (el) => {return el.textContent ?? "";});};
 
 describe("counter e2e", (): void => {
   beforeAll(async () => {
@@ -24,7 +24,7 @@ describe("counter e2e", (): void => {
     expect(await getCounterValue()).toBe("0");
 
     // Click "+" twice to increment
-    const incrementButton = () => page.$('input[type="submit"][value="+"]');
+    const incrementButton = () => {return page.$('input[type="submit"][value="+"]');};
     await (await incrementButton())!.click();
     await page.waitForNetworkIdle();
     expect(await getCounterValue()).toBe("1");
@@ -34,7 +34,7 @@ describe("counter e2e", (): void => {
     expect(await getCounterValue()).toBe("2");
 
     // Click "−" to decrement via _method=delete form
-    const decrementButton = () => page.$('input[type="submit"][value="−"]');
+    const decrementButton = () => {return page.$('input[type="submit"][value="−"]');};
     await (await decrementButton())!.click();
     await page.waitForNetworkIdle();
     expect(await getCounterValue()).toBe("1");

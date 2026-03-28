@@ -39,6 +39,8 @@ export default defineConfig([
       ...tseslint.configs.eslintRecommended.rules,
       semi: "error",
       "prefer-const": "warn",
+      curly: ["error", "all"],
+      "arrow-body-style": ["error", "always"],
       "@typescript-eslint/no-unused-vars": [
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_", args: "all" },

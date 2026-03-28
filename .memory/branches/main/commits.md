@@ -64,3 +64,23 @@ Brain was initialized with project orientation documenting the Express 5 backend
 - Slimmed down E2E test files to pure test logic without server management code
 - Added `--forceExit` flag to E2E test command to prevent process hanging
 - Updated AGENTS.md with the method-override gotcha (string arg vs function getter) and E2E test patterns (globalSetup composition, session seeding, cookie management)
+
+---
+
+## Commit f5666470 | 2026-03-28T01:58:40.437Z
+
+### Branch Purpose
+
+Main project memory branch tracking ongoing development of the Express 5 + React 19 full-stack web application.
+
+### Previous Progress Summary
+
+Brain was initialized with project orientation documenting the Express 5 backend with Pug templates, React 19 frontend, and Redis-backed sessions. Initial commit captured two routes (Home and SessionCounter), full test suite passing, and key architectural decisions (tsdown bundler, controller-base routing, Redis session key prefixing). A subsequent commit implemented decrement counter functionality using the method-override pattern with middleware wired as `cookieParser` → `sessionSetupMiddleware` → `express.urlencoded` → `methodOverride` → router. The most recent commit discovered and fixed a critical method-override bug where `methodOverride("_method")` reads from the query string instead of `req.body`, switched to function getter `methodOverride((req) => req.body?._method)`, extracted E2E server lifecycle into shared `globalSetup.ts`, and added session seeding with cookie management.
+
+### This Commit's Contribution
+
+- Identified middleware setup duplication across three files: `src/index.ts`, `test/e2e-suite/globalSetup.ts`, and `test/setupMyController.ts` — all had the same 5-line pattern (session setup, urlencoded parser, method-override, router creation, router mount)
+- Extracted shared logic into `src/lib/attachMiddleware.ts` with `attachAppMiddleware(app, options?)` function that accepts a `withRouter` option (default `true`)
+- The `withRouter: false` option enables `setupMyController` to mount only the common middleware without the full router, preserving its existing behavior of testing single controllers in isolation
+- Simplified all three callers from 4-6 imports and 3-5 middleware calls down to a single function call
+- All 36 tests (34 backend + 2 E2E) pass, lint clean — no functional changes, pure refactoring

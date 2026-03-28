@@ -24,7 +24,7 @@ export function createRecordingProxy<T extends object>(
 
   const handler: ProxyHandler<T> = {
     get(_target, prop, receiver) {
-      if (prop === "recording") return recording;
+      if (prop === "recording") {return recording;}
 
       const value = Reflect.get(target, prop, target);
 
@@ -70,9 +70,9 @@ export function wasCalledWith<T extends object>(
   if (
     proxy.recording.some(
       (e) =>
-        e.method === method &&
+        {return e.method === method &&
         e.args.length === expectedArgs.length &&
-        e.args.every((a, i) => deepishEqual(a, expectedArgs[i])),
+        e.args.every((a, i) => {return deepishEqual(a, expectedArgs[i]);});},
     )
   ) {
     return true;
@@ -91,9 +91,9 @@ ${JSON.stringify(proxy.recording, null, 2)}
 
 /** Shallow‑ish equality: handles primitives + one level of object/array */
 export function deepishEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (a == null || b == null) return false;
-  if (typeof a !== typeof b) return false;
+  if (a === b) {return true;}
+  if (a == null || b == null) {return false;}
+  if (typeof a !== typeof b) {return false;}
   /* istanbul ignore next */
   if (typeof a === "object") {
     return JSON.stringify(a) === JSON.stringify(b);

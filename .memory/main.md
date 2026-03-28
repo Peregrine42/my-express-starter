@@ -25,6 +25,7 @@ A full-stack web application serving Pug templates with React-bundled frontend a
 - **method-override pattern**: HTML forms POST with `_method` hidden field; use function getter `methodOverride((req) => req.body?._method)` — the string form reads from query string, not body
 - **Testing non-standard methods**: `setupMyController` dispatches actual HTTP methods (DELETE, etc.) directly — don't try to test the POST→override flow in unit tests
 - **E2E globalSetup**: server + browser lifecycle managed in `test/e2e-suite/globalSetup.ts`, composing jest-puppeteer's browser launch with app startup; session seeded in Redis, cookie set via `page.setCookie()`
+- **Shared middleware setup**: `src/lib/attachMiddleware.ts` provides `attachAppMiddleware(app, { withRouter? })` — centralizes session setup, urlencoded parser, method-override, and router attachment. Used by `src/index.ts`, `test/e2e-suite/globalSetup.ts`, and `test/setupMyController.ts` (with `withRouter: false`)
 
 ## Milestones
 

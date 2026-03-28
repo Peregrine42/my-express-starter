@@ -39,7 +39,7 @@ describe("RecordingProxy", () => {
     expect(wasCalledWith<Foo>(foo, "od")).toEqual(true);
 
     // @ts-expect-error
-    expect(() => wasCalledWith<Foo>(foo, "err")).toThrow(
+    expect(() => {return wasCalledWith<Foo>(foo, "err");}).toThrow(
       "Recorded object method `err` was not called",
     );
   });
