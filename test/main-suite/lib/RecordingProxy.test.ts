@@ -38,9 +38,10 @@ describe("RecordingProxy", () => {
     expect(wasCalledWith<Foo>(foo, "meth")).toEqual(true);
     expect(wasCalledWith<Foo>(foo, "od")).toEqual(true);
 
-    // @ts-expect-error
-    expect(() => {return wasCalledWith<Foo>(foo, "err");}).toThrow(
-      "Recorded object method `err` was not called",
-    );
+    const badCall = () => {
+      // @ts-ignore -- "err" is not a key of Foo
+      return wasCalledWith<Foo>(foo, "err");
+    };
+    expect(badCall).toThrow("Recorded object method `err` was not called");
   });
 });

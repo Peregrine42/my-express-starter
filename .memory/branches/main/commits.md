@@ -84,3 +84,25 @@ Brain was initialized with project orientation documenting the Express 5 backend
 - The `withRouter: false` option enables `setupMyController` to mount only the common middleware without the full router, preserving its existing behavior of testing single controllers in isolation
 - Simplified all three callers from 4-6 imports and 3-5 middleware calls down to a single function call
 - All 36 tests (34 backend + 2 E2E) pass, lint clean — no functional changes, pure refactoring
+
+---
+
+## Commit b1674d9d | 2026-03-28T02:17:05.077Z
+
+### Branch Purpose
+
+Main project memory branch tracking ongoing development of the Express 5 + React 19 full-stack web application.
+
+### Previous Progress Summary
+
+Brain was initialized with project orientation documenting the Express 5 backend with Pug templates, React 19 frontend, and Redis-backed sessions. Initial commit captured two routes (Home and SessionCounter), full test suite passing, and key architectural decisions (tsdown bundler, controller-base routing, Redis session key prefixing). A subsequent commit implemented decrement counter functionality using the method-override pattern with middleware wired as `cookieParser` → `sessionSetupMiddleware` → `express.urlencoded` → `methodOverride` → router. The most recent commit discovered and fixed a critical method-override bug where `methodOverride("_method")` reads from the query string instead of `req.body`, switched to function getter `methodOverride((req) => req.body?._method)`, extracted E2E server lifecycle into shared `globalSetup.ts`, and added session seeding with cookie management. Immediately preceding this commit, middleware setup duplication was identified across three files and extracted into `src/lib/attachMiddleware.ts` with a `withRouter` option, preserving controller isolation in unit tests.
+
+### This Commit's Contribution
+
+- Fixed type error in RecordingProxy.test.ts: replaced unused `@ts-expect-error` with `@ts-ignore` and extracted the invalid "err" key call to a separate statement, since `@ts-expect-error` only suppresses errors on the next line
+- Created session.test.ts with 16 tests covering getStringValueFromSession (invalid key, valid session, no session), incrementNumericStringValueFromSession (invalid key, increment, no session), decrementNumericStringValueFromSession (invalid key, decrement, no session), setupSession (auto-generated ID), and hasSession (no cookie, nonexistent, existing)
+- Created getMyRoutes.test.ts to validate route configuration structure and route method registration
+- Created typeGuards.test.ts covering isRes/isReq type guards and BaseController.FALLBACK behavior (throws on non-express res, sends 404 on express res)
+- Created attachMiddleware.test.ts covering session middleware wiring, `withRouter: false` (no routes), and `withRouter: true` (default, routes attached)
+- Extended router.test.ts with error handling tests: regular route handler throws → forwarded to error handler, custom 404 handler throws → forwarded, default 404 fallback works normally
+- Achieved final coverage: 98.97% statements, 100% branches, 96.66% functions. Only remaining uncovered: getRouter.ts lines 53-54 (default 404 .catch — unreachable defensive code)

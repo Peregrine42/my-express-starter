@@ -41,7 +41,9 @@ describe("the counter", () => {
     const [dispatch] = await setupMyController([SessionCounter, "GET"]);
 
     // ACT / ASSERT
-    expect(async () => {return await dispatch();}).rejects.toThrow("No session!");
+    expect(async () => {
+      return await dispatch();
+    }).rejects.toThrow("No session!");
   });
 
   it("renders the counter view", async () => {

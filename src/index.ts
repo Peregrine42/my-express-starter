@@ -15,7 +15,9 @@ declare global {
   validateEnv(envVarNames);
 
   const [_app, startApp] = await getApp({
-    withApp: (app) => {return attachAppMiddleware(app);},
+    withApp: (app) => {
+      return attachAppMiddleware(app);
+    },
   });
 
   await startApp();

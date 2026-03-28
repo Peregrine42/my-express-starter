@@ -34,25 +34,37 @@ const ESLINT_EXTS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 const SKIP_PATTERNS = [/node_modules/, /dist/, /coverage/, /\.git/];
 
 function shouldProcess(absolutePath: string): boolean {
-  return !SKIP_PATTERNS.some((pat) => {return pat.test(absolutePath);});
+  return !SKIP_PATTERNS.some((pat) => {
+    return pat.test(absolutePath);
+  });
 }
 
 export default function (pi: ExtensionAPI) {
   pi.on("tool_result", async (event, ctx) => {
-    if (event.toolName !== "edit" && event.toolName !== "write") {return;}
-    if (event.isError) {return;}
+    if (event.toolName !== "edit" && event.toolName !== "write") {
+      return;
+    }
+    if (event.isError) {
+      return;
+    }
 
     const filePath = (event.input as any)?.path as string | undefined;
-    if (!filePath) {return;}
+    if (!filePath) {
+      return;
+    }
 
     const absolutePath = resolve(ctx.cwd, filePath);
     const ext = extname(absolutePath).toLowerCase();
 
-    if (!shouldProcess(absolutePath)) {return;}
+    if (!shouldProcess(absolutePath)) {
+      return;
+    }
 
     const needsPrettier = PRETTIER_EXTS.has(ext);
     const needsEslint = ESLINT_EXTS.has(ext);
-    if (!needsPrettier && !needsEslint) {return;}
+    if (!needsPrettier && !needsEslint) {
+      return;
+    }
 
     try {
       await withFileMutationQueue(absolutePath, async () => {
