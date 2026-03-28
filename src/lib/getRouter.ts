@@ -46,13 +46,10 @@ export function configureAndAttachRoutes(
       });
     });
   } else {
-    targetRouter.all("{*splat}", (req, res, next) => {
+    targetRouter.all("{*splat}", (req, res) => {
       (async () => {
         await new BaseController().FALLBACK(req, res);
-      })().catch((e) => {
-        console.error(e);
-        next(e);
-      });
+      })();
     });
   }
 }

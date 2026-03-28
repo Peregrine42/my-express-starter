@@ -46,3 +46,31 @@ _.zip(methods, lowercaseMethods).forEach(([method, lowercaseMethod]) => {
     });
   });
 });
+
+describe("BaseController FALLBACK", () => {
+  it("throws when given a non-express response", async () => {
+    const controller = new BaseController();
+    await expect(
+      controller.FALLBACK(
+        {} as typeof express.request,
+        {} as typeof express.response,
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("sends 404 with empty body when given an express response", async () => {
+    // ARRANGE
+    const testController = new BaseController();
+    const server = express();
+    server.get("/", (req, res) => {
+      testController.GET(req, res);
+    });
+
+    // ACT
+    const resp = await inject(server, { method: "get", url: "/" });
+
+    // ASSERT
+    expect(resp.statusCode).toEqual(404);
+    expect(resp.body).toEqual("");
+  });
+});

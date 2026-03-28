@@ -1,8 +1,8 @@
 import { jest } from "@jest/globals";
-import supertest from "supertest";
 import { getApp, ShutdownApp } from "../../../src/lib/getApp";
 import { ConsoleOverride } from "../../../src/lib/conslLogging";
 import axios from "axios";
+import inject from "light-my-request";
 import { env } from "../../../src/env";
 
 describe("App", () => {
@@ -73,10 +73,12 @@ describe("App", () => {
   it("can serve static files", async () => {
     // ARRANGE
     const [app] = await getApp();
-    const testAgent = supertest(app);
 
     // ACT
-    const response = await testAgent.get("/public/favicon.ico");
+    const response = await inject(app, {
+      method: "GET",
+      url: "/public/favicon.ico",
+    });
 
     // ASSERT
     expect(response.statusCode).toEqual(200);
@@ -96,14 +98,13 @@ describe("App", () => {
         error: jest.fn(),
       } as ConsoleOverride,
     });
-    const testAgent = supertest(app);
 
     // ACT
-    const response = await testAgent.get("/error-route");
+    const response = await inject(app, { method: "GET", url: "/error-route" });
 
     // ASSERT
     expect(response.statusCode).toEqual(500);
-    expect(response.text).toEqual("Internal Server Error");
+    expect(response.body).toEqual("Internal Server Error");
   });
 
   it("can shutdown cleanly on error", async () => {

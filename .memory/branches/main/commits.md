@@ -106,3 +106,25 @@ Brain was initialized with project orientation documenting the Express 5 backend
 - Created attachMiddleware.test.ts covering session middleware wiring, `withRouter: false` (no routes), and `withRouter: true` (default, routes attached)
 - Extended router.test.ts with error handling tests: regular route handler throws → forwarded to error handler, custom 404 handler throws → forwarded, default 404 fallback works normally
 - Achieved final coverage: 98.97% statements, 100% branches, 96.66% functions. Only remaining uncovered: getRouter.ts lines 53-54 (default 404 .catch — unreachable defensive code)
+
+---
+
+## Commit 6e9d5108 | 2026-03-28T02:39:34.648Z
+
+### Branch Purpose
+
+Main project memory branch tracking ongoing development of the Express 5 + React 19 full-stack web application.
+
+### Previous Progress Summary
+
+Brain was initialized with project orientation documenting the Express 5 backend with Pug templates, React 19 frontend, and Redis-backed sessions. Initial commit captured two routes (Home and SessionCounter), full test suite passing, and key architectural decisions (tsdown bundler, controller-base routing, Redis session key prefixing). A subsequent commit implemented decrement counter functionality using the method-override pattern with middleware wired as `cookieParser` → `sessionSetupMiddleware` → `express.urlencoded` → `methodOverride` → router. The most recent commit discovered and fixed a critical method-override bug where `methodOverride("_method")` reads from the query string instead of `req.body`, switched to function getter `methodOverride((req) => req.body?._method)`, extracted E2E server lifecycle into shared `globalSetup.ts`, and added session seeding with cookie management. Immediately preceding this commit, middleware setup duplication was identified across three files and extracted into `src/lib/attachMiddleware.ts` with a `withRouter` option, preserving controller isolation in unit tests. Coverage was increased to 98.97% statements through additions of session.test.ts (16 tests), getMyRoutes.test.ts, typeGuards.test.ts, attachMiddleware.test.ts, and extended router.test.ts error handling.
+
+### This Commit's Contribution
+
+- Refactored `setupController` return type from tuple `[req, res]` to object `{ req, res, response }`, surfacing the light-my-request `Response` object for direct status/body assertions
+- Eliminated `jest.spyOn(res, "send")` in Controller.test.ts's FALLBACK test, replaced with light-my-request assertions on `statusCode` and `body`
+- Replaced all `supertest` usage with `light-my-request` in router.test.ts and getApp.test.ts (static file and error handler tests), removing supertest dependency from backend test suite; axios tests for real HTTP server calls remain unchanged
+- Updated counter.test.ts to use `wasCalledWith` helper instead of directly accessing `res.recording[0].method` and `args`, providing better failure messages
+- Replaced `deepishEqual` with `containsDeep` in RecordingProxy.test.ts and updated `wasCalledWith` to accept fewer args than the actual call received (subset matching)
+- Cleaned up dead imports and simplified assertion patterns across counter.test.ts and home.test.ts, using `response.statusCode` from l-m-r instead of reading through proxy
+- All 61 tests remain passing; this is a pure test infrastructure refactoring that reduces mocking complexity and aligns the suite on a single HTTP testing library (light-my-request) for Express request/response testing

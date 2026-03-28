@@ -1,16 +1,12 @@
 import { SessionCounter } from "../../src/controllers/SessionCounter";
-import {} from // getHTMLDocumentBody,
-// setupController,
-"./lib/setupController";
-// import { getByTestId } from "@testing-library/dom";
+import { wasCalledWith } from "./lib/RecordingProxy";
 import { Cookie } from "tough-cookie";
 import Redis from "ioredis";
 import {
   getStringValueFromSession,
   SessionReq,
   SessionRes,
-  setupSession, // setStringValueFromSession,
-  // setupSession,
+  setupSession,
 } from "../../src/lib/session";
 import { setupMyController } from "../setupMyController";
 
@@ -63,15 +59,15 @@ describe("the counter", () => {
     const [dispatch] = await setupMyController([SessionCounter, "GET"]);
 
     // ACT
-    const [_req, res] = await dispatch({
+    const { res, response } = await dispatch({
       headers: {
         cookie: cookieString,
       },
     });
 
     // ASSERT
-    expect(res.recording[0].method).toEqual("render");
-    expect(res.recording[0].args[0]).toEqual("counter");
+    expect(response.statusCode).toEqual(200);
+    wasCalledWith(res, "render", "counter", { value: 0 });
   });
 
   it("throws when given a missing session", async () => {
@@ -117,7 +113,7 @@ describe("the counter", () => {
       },
     });
 
-    const [req, res] = await dispatch({
+    const { req, res } = await dispatch({
       method: "POST",
       headers: {
         cookie: cookieString,
@@ -157,7 +153,7 @@ describe("the counter", () => {
       },
     });
 
-    const [req, res] = await dispatch({
+    const { req, res } = await dispatch({
       method: "DELETE",
       headers: {
         cookie: cookieString,

@@ -64,51 +64,88 @@ export function createRecordingProxy<T extends object>(
 }
 
 // ─── Assertion helpers ─────────────────────────────────
+
+/**
+ * Assert that `method` was called on the proxy with args matching
+ * `expectedArgs` (positional prefix — you can pass fewer args than the
+ * call received).
+ *
+ * Object args are matched as **subsets**: the actual arg must contain
+ * every key from the expected arg, but may have additional keys (e.g.
+ * Express merging `res.locals` into render options).
+ *
+ * Arrays are matched **exactly** (same length, same elements).
+ *
+ * Throws with a diff on mismatch; returns `true` on match.
+ */
 export function wasCalledWith<T extends object>(
   proxy: RecordedObject<T>,
   method: keyof T & string,
   ...expectedArgs: unknown[]
-): boolean {
-  if (
-    proxy.recording.some((e) => {
-      return (
-        e.method === method &&
-        e.args.length === expectedArgs.length &&
-        e.args.every((a, i) => {
-          return deepishEqual(a, expectedArgs[i]);
-        })
-      );
-    })
-  ) {
+): true {
+  const match = proxy.recording.some((e) => {
+    return (
+      e.method === method &&
+      e.args.length >= expectedArgs.length &&
+      expectedArgs.every((expected, i) => {
+        return containsDeep(e.args[i], expected);
+      })
+    );
+  });
+
+  if (match) {
     return true;
-  } else {
-    throw new Error(
-      `
-Recorded object method \`${method}\` was not called with:      
+  }
+
+  throw new Error(
+    `
+Recorded object method \`${method}\` was not called with:
 ${JSON.stringify(expectedArgs, null, 2)}
 
 Got recording:
 ${JSON.stringify(proxy.recording, null, 2)}
 `.trim(),
-    );
-  }
+  );
 }
 
-/** Shallow‑ish equality: handles primitives + one level of object/array */
-export function deepishEqual(a: unknown, b: unknown): boolean {
-  if (a === b) {
+/**
+ * Deep subset comparison.
+ *
+ * - Primitives: strict equality.
+ * - Arrays: exact match (same length, same elements).
+ * - Plain objects: `expected` must be a **subset** of `actual` — every
+ *   key in `expected` must exist in `actual` with a matching value
+ *   (checked recursively). Extra keys in `actual` are ignored.
+ */
+export function containsDeep(actual: unknown, expected: unknown): boolean {
+  if (actual === expected) {
     return true;
   }
-  if (a == null || b == null) {
+  if (actual == null || expected == null) {
     return false;
   }
-  if (typeof a !== typeof b) {
+  if (typeof actual !== typeof expected) {
     return false;
   }
-  /* istanbul ignore next */
-  if (typeof a === "object") {
-    return JSON.stringify(a) === JSON.stringify(b);
-  } else {
-    throw "Unknown comparison!";
+
+  if (Array.isArray(actual)) {
+    if (!Array.isArray(expected) || actual.length !== expected.length) {
+      return false;
+    }
+
+    return actual.every((a, i) => {
+      return containsDeep(a, expected[i]);
+    });
   }
+
+  if (typeof actual === "object") {
+    const expectedObj = expected as Record<string, unknown>;
+    const actualObj = actual as Record<string, unknown>;
+
+    return Object.keys(expectedObj).every((key) => {
+      return key in actualObj && containsDeep(actualObj[key], expectedObj[key]);
+    });
+  }
+
+  return false;
 }

@@ -1,7 +1,6 @@
 import express, { Router } from "express";
-import { jest } from "@jest/globals";
 import { configureAndAttachRoutes } from "../../../src/lib/getRouter";
-import supertest from "supertest";
+import inject from "light-my-request";
 import { BaseController } from "../../../src/lib/Controller";
 
 describe("when a handler IS defined", () => {
@@ -14,14 +13,13 @@ describe("when a handler IS defined", () => {
     });
     const app = express();
     app.use("/", router);
-    const testAgent = supertest(app);
 
     // ACT
-    const response = await testAgent.get("/");
+    const response = await inject(app, { method: "GET", url: "/" });
 
     // ASSERT
     expect(response.statusCode).toEqual(404);
-    expect(response.text).toHaveLength(0);
+    expect(response.body).toEqual("");
   });
 });
 
@@ -32,14 +30,13 @@ describe("when a handler is not defined", () => {
     configureAndAttachRoutes(router, {}); // no routes defined - so we should get 404 for anything
     const app = express();
     app.use("/", router);
-    const testAgent = supertest(app);
 
     // ACT
-    const response = await testAgent.get("/");
+    const response = await inject(app, { method: "GET", url: "/" });
 
     // ASSERT
     expect(response.statusCode).toEqual(404);
-    expect(response.text).toHaveLength(0);
+    expect(response.body).toEqual("");
   });
 
   it("responds with 404 - nested", async () => {
@@ -48,14 +45,13 @@ describe("when a handler is not defined", () => {
     configureAndAttachRoutes(router, {});
     const app = express();
     app.use("/", router);
-    const testAgent = supertest(app);
 
     // ACT
-    const response = await testAgent.get("/nested/route");
+    const response = await inject(app, { method: "GET", url: "/nested/route" });
 
     // ASSERT
     expect(response.statusCode).toEqual(404);
-    expect(response.text).toHaveLength(0);
+    expect(response.body).toEqual("");
   });
 
   it("responds with a custom 404, if provided", async () => {
@@ -73,14 +69,13 @@ describe("when a handler is not defined", () => {
     });
     const app = express();
     app.use("/", router);
-    const testAgent = supertest(app);
 
     // ACT
-    const response = await testAgent.get("/");
+    const response = await inject(app, { method: "GET", url: "/" });
 
     // ASSERT
     expect(response.statusCode).toEqual(404);
-    expect(response.text).toEqual("Not found!");
+    expect(response.body).toEqual("Not found!");
   });
 });
 
@@ -113,14 +108,13 @@ describe("error handling in route wrappers", () => {
       res.status(500).send("error handled");
     };
     app.use(errorHandler);
-    const testAgent = supertest(app);
 
     // ACT
-    const response = await testAgent.get("/boom");
+    const response = await inject(app, { method: "GET", url: "/boom" });
 
     // ASSERT
     expect(response.statusCode).toEqual(500);
-    expect(response.text).toEqual("error handled");
+    expect(response.body).toEqual("error handled");
     expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
     consoleSpy.mockRestore();
   });
@@ -153,14 +147,13 @@ describe("error handling in route wrappers", () => {
       res.status(500).send("error handled");
     };
     app.use(errorHandler);
-    const testAgent = supertest(app);
 
     // ACT
-    const response = await testAgent.get("/anything");
+    const response = await inject(app, { method: "GET", url: "/anything" });
 
     // ASSERT
     expect(response.statusCode).toEqual(500);
-    expect(response.text).toEqual("error handled");
+    expect(response.body).toEqual("error handled");
     expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
     consoleSpy.mockRestore();
   });
@@ -186,10 +179,9 @@ describe("error handling in route wrappers", () => {
       res.status(500).send("error handled");
     };
     app.use(errorHandler);
-    const testAgent = supertest(app);
 
     // ACT — the default 404 should work normally (no error)
-    const response = await testAgent.get("/nonexistent");
+    const response = await inject(app, { method: "GET", url: "/nonexistent" });
 
     // ASSERT
     expect(response.statusCode).toEqual(404);
