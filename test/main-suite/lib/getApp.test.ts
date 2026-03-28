@@ -9,10 +9,6 @@ describe("App", () => {
   describe("on start", () => {
     let shutdown: ShutdownApp | void;
 
-    afterEach(async () => {
-      await shutdown?.();
-    });
-
     it("starts an HTTP server", async () => {
       // ARRANGE
       const [_app, startApp] = await getApp({
