@@ -5,10 +5,13 @@ export default defineConfig({
   platform: "node",
   entry: ["./src/index.ts"],
   target: "node24",
-  format: ["commonjs"],
+  format: "cjs",
   unbundle: true,
   outputOptions: {
     entryFileNames: "src/[name].js",
+  },
+  deps: {
+    alwaysBundle: [],
   },
   checks: {
     legacyCjs: false,

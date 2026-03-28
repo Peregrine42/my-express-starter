@@ -128,3 +128,41 @@ Brain was initialized with project orientation documenting the Express 5 backend
 - Replaced `deepishEqual` with `containsDeep` in RecordingProxy.test.ts and updated `wasCalledWith` to accept fewer args than the actual call received (subset matching)
 - Cleaned up dead imports and simplified assertion patterns across counter.test.ts and home.test.ts, using `response.statusCode` from l-m-r instead of reading through proxy
 - All 61 tests remain passing; this is a pure test infrastructure refactoring that reduces mocking complexity and aligns the suite on a single HTTP testing library (light-my-request) for Express request/response testing
+
+---
+
+## Commit 3cac5144 | 2026-03-28T03:17:31.872Z
+
+### Branch Purpose
+
+Main project memory branch tracking ongoing development of the Express 5 + React 19 full-stack web application.
+
+### Previous Progress Summary
+
+Brain was initialized with project orientation documenting the Express 5 backend with Pug templates, React 19 frontend, and Redis-backed sessions. Initial commit captured two routes (Home and SessionCounter), full test suite passing, and key architectural decisions (tsdown bundler, controller-base routing, Redis session key prefixing). A subsequent commit implemented decrement counter functionality using the method-override pattern with middleware wired as `cookieParser` → `sessionSetupMiddleware` → `express.urlencoded` → `methodOverride` → router. The most recent commit discovered and fixed a critical method-override bug where `methodOverride("_method")` reads from the query string instead of `req.body`, switched to function getter `methodOverride((req) => req.body?._method)`, extracted E2E server lifecycle into shared `globalSetup.ts`, and added session seeding with cookie management. Immediately preceding this commit, middleware setup duplication was identified across three files and extracted into `src/lib/attachMiddleware.ts` with a `withRouter` option, preserving controller isolation in unit tests. Coverage was increased to 98.97% statements through additions of session.test.ts (16 tests), getMyRoutes.test.ts, typeGuards.test.ts, attachMiddleware.test.ts, and extended router.test.ts error handling. A later commit refactored `setupController` return type from tuple `[req, res]` to object `{ req, res, response }`, eliminated `jest.spyOn` in Controller.test.ts, replaced all `supertest` usage with `light-my-request`, replaced `deepishEqual` with `containsDeep`, and simplified assertion patterns across counter.test.ts and home.test.ts. A planned testing improvement strategy was then created but not fully executed—only Phase 1 (deduplicate FALLBACK tests, fix duplicate afterEach) and Phase 2 (extract session helpers) were completed, along with partial Phase 4 (standardize `wasCalledWith` usage).
+
+### This Commit's Contribution
+
+- Discovered ESM-only package loading incompatibility: `tsdown.test.config.mts` with `unbundle: true` + `skipNodeModulesBundle: true` produces CJS output that uses `require()` for node_modules, which fails in Jest's CJS runtime for pure ESM packages like `p-map` (Node 25's `require()` support for ESM doesn't extend to Jest's module system)
+- Created custom `jestGlobals` rolldown plugin that replaces `@jest/globals` imports with `globalThis.jest`, `globalThis.describe`, etc. to bypass Jest's "do not import @jest/globals outside test environment" error
+- Switched test build from `unbundle: true` to `unbundle: false` with `alwaysBundle: [/p-map/, /tough-cookie/, /axios/]` to inline ESM-only packages directly into CJS test output
+- Fixed `src/lib/getApp.ts` publicPath from `import.meta.dirname`-based relative path to `process.cwd()`, since `unbundle: false` relocates modules into chunks making `__dirname`/`import.meta.dirname` unreliable for calculating project-relative paths
+- All 66 backend tests pass with 100% coverage; test infrastructure now supports both CJS and ESM dependencies without requiring two separate build passes or per-package workarounds
+
+---
+
+## Commit 8c443b1e | 2026-03-28T03:20:45.912Z
+
+### Branch Purpose
+
+Main project memory branch tracking ongoing development of the Express 5 + React 19 full-stack web application.
+
+### Previous Progress Summary
+
+Brain was initialized with project orientation documenting the Express 5 backend with Pug templates, React 19 frontend, and Redis-backed sessions. Initial commit captured two routes (Home and SessionCounter), full test suite passing, and key architectural decisions (tsdown bundler, controller-base routing, Redis session key prefixing). A subsequent commit implemented decrement counter functionality using the method-override pattern with middleware wired as `cookieParser` → `sessionSetupMiddleware` → `express.urlencoded` → `methodOverride` → router. The most recent commit discovered and fixed a critical method-override bug where `methodOverride("_method")` reads from the query string instead of `req.body`, switched to function getter `methodOverride((req) => req.body?._method)`, extracted E2E server lifecycle into shared `globalSetup.ts`, and added session seeding with cookie management. Immediately preceding this commit, middleware setup duplication was identified across three files and extracted into `src/lib/attachMiddleware.ts` with a `withRouter` option, preserving controller isolation in unit tests. Coverage was increased to 98.97% statements through additions of session.test.ts (16 tests), getMyRoutes.test.ts, typeGuards.test.ts, attachMiddleware.test.ts, and extended router.test.ts error handling. A later commit refactored `setupController` return type from tuple `[req, res]` to object `{ req, res, response }`, eliminated `jest.spyOn` in Controller.test.ts, replaced all `supertest` usage with `light-my-request`, replaced `deepishEqual` with `containsDeep`, and simplified assertion patterns across counter.test.ts and home.test.ts. The most recent commit resolved ESM-only package loading incompatibility by switching `tsdown.test.config.mts` from `unbundle: true` to `unbundle: false` with a custom `jestGlobals` plugin and `deps.alwaysBundle` for ESM-only packages, and fixed `getApp.ts` to use `process.cwd()` instead of `import.meta.dirname` for reliable path resolution.
+
+### This Commit's Contribution
+
+- Verified full test suite passes after ESM fixes: all 69 tests green (66 backend, 1 frontend, 2 E2E) across 16 test suites
+- Documented quick-reference grep patterns for test output: `npm test 2>&1 | grep "Test Suites\|Tests:\|FAIL"` for summary, `npm test 2>&1 | grep "FAIL" -A 10` for failure details
+- Noted coverage reporting behavior: per-project coverage breakdown, E2E shows 0% (correctly ignored by config since it drives browser, doesn't execute instrumented code)
