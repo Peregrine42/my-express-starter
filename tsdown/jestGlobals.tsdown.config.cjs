@@ -1,5 +1,3 @@
-import type { Plugin } from "rolldown";
-
 /**
  * Rolldown plugin that replaces @jest/globals imports with global references.
  *
@@ -8,9 +6,12 @@ import type { Plugin } from "rolldown";
  * Jest injects jest, describe, expect, etc. as globals, so we intercept the
  * resolve/load and return references to those globals instead.
  */
-export function jestGlobals(): Plugin {
+function jestGlobals() {
   return {
     name: "jest-globals-external",
+    /**
+     * @param {string} id
+     */
     resolveId(id) {
       if (id === "@jest/globals") {
         return { id: "@jest/globals", external: true };
@@ -18,6 +19,9 @@ export function jestGlobals(): Plugin {
         return undefined;
       }
     },
+    /**
+     * @param {string} id
+     */
     load(id) {
       if (id === "@jest/globals") {
         return `
@@ -37,3 +41,7 @@ export function jestGlobals(): Plugin {
     },
   };
 }
+
+module.exports = {
+  jestGlobals,
+};

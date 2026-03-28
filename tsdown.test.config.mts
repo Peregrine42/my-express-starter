@@ -1,6 +1,6 @@
 import { defineConfig } from "tsdown";
-import { alwaysBundle } from "./tsdown/alwaysBundle.tsdown.config.ts";
-import { jestGlobals } from "./tsdown/jestGlobals.tsdown.config.ts";
+import { alwaysBundle } from "./tsdown/alwaysBundle.tsdown.config.cjs";
+import { jestGlobals } from "./tsdown/jestGlobals.tsdown.config.cjs";
 
 export default defineConfig({
   clean: true,
@@ -22,8 +22,10 @@ export default defineConfig({
   plugins: [jestGlobals()],
   deps: {
     alwaysBundle: alwaysBundle,
+    onlyBundle: false,
   },
   checks: {
     legacyCjs: false,
+    pluginTimings: false,
   },
 });

@@ -166,3 +166,20 @@ Brain was initialized with project orientation documenting the Express 5 backend
 - Verified full test suite passes after ESM fixes: all 69 tests green (66 backend, 1 frontend, 2 E2E) across 16 test suites
 - Documented quick-reference grep patterns for test output: `npm test 2>&1 | grep "Test Suites\|Tests:\|FAIL"` for summary, `npm test 2>&1 | grep "FAIL" -A 10` for failure details
 - Noted coverage reporting behavior: per-project coverage breakdown, E2E shows 0% (correctly ignored by config since it drives browser, doesn't execute instrumented code)
+
+---
+
+## Commit 46297a0c | 2026-03-28T03:43:14.818Z
+
+### Branch Purpose
+
+The main branch tracks ongoing project memory for the Express 5 + React 19 full-stack application, capturing key decisions, architectural insights, and implementation learnings as the codebase evolves.
+
+### Previous Progress Summary
+
+Brain was initialized with project orientation documenting the Express 5 backend with Pug templates, React 19 frontend, and Redis-backed sessions. Initial commit captured two routes (Home and SessionCounter), full test suite passing, and key architectural decisions (tsdown bundler, controller-base routing, Redis session key prefixing). A subsequent commit implemented decrement counter functionality using the method-override pattern with middleware wired as `cookieParser` → `sessionSetupMiddleware` → `express.urlencoded` → `methodOverride` → router. The most recent commit discovered and fixed a critical method-override bug where `methodOverride("_method")` reads from the query string instead of `req.body`, switched to function getter `methodOverride((req) => req.body?._method)`, extracted E2E server lifecycle into shared `globalSetup.ts`, and added session seeding with cookie management. Immediately preceding this commit, middleware setup duplication was identified across three files and extracted into `src/lib/attachMiddleware.ts` with a `withRouter` option, preserving controller isolation in unit tests. Coverage was increased to 98.97% statements through additions of session.test.ts (16 tests), getMyRoutes.test.ts, typeGuards.test.ts, attachMiddleware.test.ts, and extended router.test.ts error handling. A later commit refactored `setupController` return type from tuple `[req, res]` to object `{ req, res, response }`, eliminated `jest.spyOn` in Controller.test.ts, replaced all `supertest` usage with `light-my-request`, replaced `deepishEqual` with `containsDeep`, and simplified assertion patterns across counter.test.ts and home.test.ts. The most recent commit resolved ESM-only package loading incompatibility by switching `tsdown.test.config.mts` from `unbundle: true` to `unbundle: false` with a custom `jestGlobals` plugin and `deps.alwaysBundle` for ESM-only packages, and fixed `getApp.ts` to use `process.cwd()` instead of `import.meta.dirname` for reliable path resolution. Full test suite verified passing with 69 tests green (66 backend, 1 frontend, 2 E2E), with documented grep patterns for test output analysis and coverage reporting behavior.
+
+### This Commit's Contribution
+
+- Removed unnecessary non-null assertion (`!`) on `req.cookies` in SessionCounter.ts—`@types/cookie-parser` augments `Express.Request.cookies` to `Record<string, any>`, which is always defined, so `req.cookies.session = sessionId` type-checks cleanly without any assertion
+- Lesson learned: check what type augmentations libraries already provide before reaching for `!`—many libraries (like cookie-parser) declare their types precisely to make downstream usage safe without assertions

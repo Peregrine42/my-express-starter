@@ -1,5 +1,5 @@
 import { defineConfig } from "tsdown";
-import { alwaysBundle } from "./tsdown/alwaysBundle.tsdown.config.ts";
+import { alwaysBundle } from "./tsdown/alwaysBundle.tsdown.config.cjs";
 
 export default defineConfig({
   clean: true,
@@ -13,8 +13,10 @@ export default defineConfig({
   },
   deps: {
     alwaysBundle,
+    onlyBundle: false,
   },
   checks: {
     legacyCjs: false,
+    pluginTimings: false,
   },
 });
