@@ -7,6 +7,7 @@ export default defineConfig({
   },
   platform: "node",
   entry: [
+    "./test/helpers/**/*.ts",
     "./test/main-suite/**/*.ts",
     "./test/e2e-suite/**/*.ts",
     "./test/setupTests.ts",

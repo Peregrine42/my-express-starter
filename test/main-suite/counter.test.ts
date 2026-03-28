@@ -1,172 +1,125 @@
 import { SessionCounter } from "../../src/controllers/SessionCounter";
 import { wasCalledWith } from "./lib/RecordingProxy";
-import { Cookie } from "tough-cookie";
-import Redis from "ioredis";
 import {
   getStringValueFromSession,
   SessionReq,
   SessionRes,
-  setupSession,
 } from "../../src/lib/session";
 import { setupMyController } from "../setupMyController";
+import { cleanSessionKeys, seedSession } from "../helpers/session";
 
 const existingSessionId = "foo";
 const allowedSessionObjectKeys = ["counter"];
 
 describe("the counter", () => {
-  beforeEach(async () => {
-    const redis = new Redis({ keyPrefix: "session:counter:" });
-
-    try {
-      await redis.del(existingSessionId);
-    } finally {
-      redis.disconnect();
-    }
-
-    const redis2 = new Redis({ keyPrefix: "session::" });
-
-    try {
-      await redis2.del(existingSessionId);
-    } finally {
-      redis2.disconnect();
-    }
+  beforeEach(() => {
+    return cleanSessionKeys(existingSessionId);
   });
 
-  it("throws an error when accessed without a session", async () => {
+  it("throws when no session cookie is present", async () => {
     // ARRANGE
     const [dispatch] = await setupMyController([SessionCounter, "GET"]);
-
     // ACT / ASSERT
-    expect(async () => {
-      return await dispatch();
-    }).rejects.toThrow("No session!");
+    await expect(dispatch()).rejects.toThrow("No session!");
+  });
+
+  it("throws when session cookie is present but session does not exist in Redis", async () => {
+    // ARRANGE
+    const { headers } = await seedSession(
+      existingSessionId,
+      allowedSessionObjectKeys,
+    );
+    await cleanSessionKeys(existingSessionId); // remove what seedSession just created
+    const [dispatch] = await setupMyController([SessionCounter, "GET"]);
+    // ACT / ASSERT
+    await expect(dispatch({ headers })).rejects.toThrow("No session!");
   });
 
   it("renders the counter view", async () => {
     // ARRANGE
-    const cookieString = new Cookie({
-      value: existingSessionId,
-      key: "session",
-      path: "/",
-    }).cookieString();
-
-    await setupSession(
-      { cookies: { session: existingSessionId } },
-      { locals: { allowedSessionObjectKeys } },
+    const { headers } = await seedSession(
       existingSessionId,
+      allowedSessionObjectKeys,
     );
-
     const [dispatch] = await setupMyController([SessionCounter, "GET"]);
-
     // ACT
-    const { res, response } = await dispatch({
-      headers: {
-        cookie: cookieString,
-      },
-    });
-
+    const { res, response } = await dispatch({ headers });
     // ASSERT
     expect(response.statusCode).toEqual(200);
     wasCalledWith(res, "render", "counter", { value: 0 });
   });
 
-  it("throws when given a missing session", async () => {
+  it("sets the counter to 1 on first POST", async () => {
     // ARRANGE
-    const cookieString = new Cookie({
-      value: existingSessionId,
-      key: "session",
-      path: "/",
-    }).cookieString();
-
-    const [dispatch] = await setupMyController([SessionCounter, "GET"]);
-
-    // ACT
-    await expect(async () => {
-      await dispatch({
-        headers: {
-          cookie: cookieString,
-        },
-      });
-    }).rejects.toThrow("No session!");
-  });
-
-  it("can increment the value stored in Redis", async () => {
-    // ARRANGE
-    const cookieString = new Cookie({
-      value: existingSessionId,
-      key: "session",
-    }).cookieString();
-
-    await setupSession(
-      { cookies: { session: existingSessionId } },
-      { locals: { allowedSessionObjectKeys } },
+    const { headers } = await seedSession(
       existingSessionId,
+      allowedSessionObjectKeys,
     );
-
     const [dispatch] = await setupMyController([SessionCounter, "POST"]);
-
     // ACT
-    await dispatch({
-      method: "POST",
-      headers: {
-        cookie: cookieString,
-      },
-    });
-
-    const { req, res } = await dispatch({
-      method: "POST",
-      headers: {
-        cookie: cookieString,
-      },
-    });
-
-    // ASSERT
-    const val2 = await getStringValueFromSession(
-      req as SessionReq,
-      res as SessionRes,
-      "counter",
-    );
-
-    expect(val2).toEqual("2");
-  });
-
-  it("can decrement the value stored in Redis", async () => {
-    // ARRANGE
-    const cookieString = new Cookie({
-      value: existingSessionId,
-      key: "session",
-    }).cookieString();
-
-    await setupSession(
-      { cookies: { session: existingSessionId } },
-      { locals: { allowedSessionObjectKeys } },
-      existingSessionId,
-    );
-
-    const [dispatch] = await setupMyController([SessionCounter, "DELETE"]);
-
-    // ACT
-    await dispatch({
-      method: "DELETE",
-      headers: {
-        cookie: cookieString,
-      },
-    });
-
-    const { req, res } = await dispatch({
-      method: "DELETE",
-      headers: {
-        cookie: cookieString,
-      },
-    });
-
+    const { req, res } = await dispatch({ method: "POST", headers });
     // ASSERT
     const val = await getStringValueFromSession(
       req as SessionReq,
       res as SessionRes,
       "counter",
     );
+    expect(val).toEqual("1");
+  });
 
+  it("accumulates on repeated POSTs", async () => {
+    // ARRANGE
+    const { headers } = await seedSession(
+      existingSessionId,
+      allowedSessionObjectKeys,
+    );
+    const [dispatch] = await setupMyController([SessionCounter, "POST"]);
+    // ACT
+    await dispatch({ method: "POST", headers });
+    const { req, res } = await dispatch({ method: "POST", headers });
+    // ASSERT
+    const val = await getStringValueFromSession(
+      req as SessionReq,
+      res as SessionRes,
+      "counter",
+    );
+    expect(val).toEqual("2");
+  });
+
+  it("sets the counter to -1 on first DELETE", async () => {
+    // ARRANGE
+    const { headers } = await seedSession(
+      existingSessionId,
+      allowedSessionObjectKeys,
+    );
+    const [dispatch] = await setupMyController([SessionCounter, "DELETE"]);
+    // ACT
+    const { req, res } = await dispatch({ method: "DELETE", headers });
+    // ASSERT
+    const val = await getStringValueFromSession(
+      req as SessionReq,
+      res as SessionRes,
+      "counter",
+    );
+    expect(val).toEqual("-1");
+  });
+
+  it("accumulates on repeated DELETEs", async () => {
+    // ARRANGE
+    const { headers } = await seedSession(
+      existingSessionId,
+      allowedSessionObjectKeys,
+    );
+    const [dispatch] = await setupMyController([SessionCounter, "DELETE"]);
+    // ACT
+    await dispatch({ method: "DELETE", headers });
+    const { req, res } = await dispatch({ method: "DELETE", headers });
+    // ASSERT
+    const val = await getStringValueFromSession(
+      req as SessionReq,
+      res as SessionRes,
+      "counter",
+    );
     expect(val).toEqual("-2");
   });
 });

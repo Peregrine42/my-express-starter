@@ -8,26 +8,14 @@ import {
   SessionRes,
   setupSession,
 } from "../../../src/lib/session";
+import { cleanSessionKeys } from "../../helpers/session";
 
 const existingSessionId = "session-test-session";
 const allowedSessionObjectKeys = ["counter"];
 
 describe("session helpers", () => {
-  beforeEach(async () => {
-    // Clean up Redis keys used by tests
-    const redisCounter = new Redis({ keyPrefix: "session:counter:" });
-    try {
-      await redisCounter.del(existingSessionId);
-    } finally {
-      redisCounter.disconnect();
-    }
-
-    const redisSession = new Redis({ keyPrefix: "session::" });
-    try {
-      await redisSession.del(existingSessionId);
-    } finally {
-      redisSession.disconnect();
-    }
+  beforeEach(() => {
+    return cleanSessionKeys(existingSessionId);
   });
 
   describe("getStringValueFromSession", () => {
