@@ -8,6 +8,7 @@
     "ioredis": "5.10.0",
     "lodash": "4.17.23",
     "method-override": "3.0.0",
+    "p-map": "7.0.4",
     "pug": "3.0.4"
   },
   "devDependencies": {

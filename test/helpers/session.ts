@@ -1,3 +1,4 @@
+import pMap from "p-map";
 import { Cookie } from "tough-cookie";
 import Redis from "ioredis";
 import { setupSession } from "../../src/lib/session";
@@ -33,22 +34,28 @@ export async function seedSession(
 export async function cleanSessionKeys(
   sessionId: string,
   keys: string[] = ["counter"],
+  { concurrency }: { concurrency?: number } = {},
 ): Promise<void> {
-  const redis = new Redis({ keyPrefix: "session::" });
-  try {
-    await redis.del(sessionId);
-  } finally {
-    redis.disconnect();
-  }
-
-  await Promise.all(
-    keys.map(async (key) => {
-      const r = new Redis({ keyPrefix: `session:${key}:` });
-      try {
-        await r.del(sessionId);
-      } finally {
-        r.disconnect();
-      }
+  const allKeys = [
+    "",
+    ...keys.map((key) => {
+      return key;
     }),
+  ];
+  const keyPrefixes = allKeys.map((key) => {
+    return `session:${key}:`;
+  });
+
+  await pMap(
+    keyPrefixes,
+    async (keyPrefix) => {
+      const redis = new Redis({ keyPrefix });
+      try {
+        await redis.del(sessionId);
+      } finally {
+        redis.disconnect();
+      }
+    },
+    { concurrency },
   );
 }

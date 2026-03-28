@@ -66,15 +66,15 @@ describe("RecordingProxy", () => {
 
     const foo = createRecordingProxy(new Foo());
     const result = foo.meth().od();
+    // ASSERT
     expect(result).toEqual(42);
-    expect(wasCalledWith(foo, "meth")).toEqual(true);
-    expect(wasCalledWith(foo, "od")).toEqual(true);
+    wasCalledWith(foo, "meth");
+    wasCalledWith(foo, "od");
 
-    const badCall = () => {
+    expect(() => {
       // @ts-ignore -- "err" is not a key of Foo
       return wasCalledWith(foo, "err");
-    };
-    expect(badCall).toThrow("Recorded object method `err` was not called");
+    }).toThrow("Recorded object method `err` was not called");
   });
 
   it("allows matching with fewer expected args than the call received", () => {
@@ -87,19 +87,17 @@ describe("RecordingProxy", () => {
     const bar = createRecordingProxy(new Bar());
     bar.render("counter", { value: 0, _locals: { reqId: "abc" } });
 
-    // Just check the template name — ignore locals
-    expect(wasCalledWith(bar, "render", "counter")).toEqual(true);
+    // ASSERT — just check the template name, ignore locals
+    wasCalledWith(bar, "render", "counter");
 
     // Check template name + subset of locals
-    expect(wasCalledWith(bar, "render", "counter", { value: 0 })).toEqual(true);
+    wasCalledWith(bar, "render", "counter", { value: 0 });
 
     // Full match still works
-    expect(
-      wasCalledWith(bar, "render", "counter", {
-        value: 0,
-        _locals: { reqId: "abc" },
-      }),
-    ).toEqual(true);
+    wasCalledWith(bar, "render", "counter", {
+      value: 0,
+      _locals: { reqId: "abc" },
+    });
 
     // Wrong value still fails
     expect(() => {

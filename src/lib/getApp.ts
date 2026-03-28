@@ -17,7 +17,7 @@ export async function getApp({
   },
   beforeAppStartup = async (_app) => {},
   consoleOverride = console,
-  publicPath = path.join(import.meta.dirname, "..", "..", "..", "public"),
+  publicPath = path.join(process.cwd(), "public"),
 }: {
   withApp?: (_app: express.Application) => Promise<void>;
   withAppStartupComplete?: (_app: express.Application) => Promise<ShutdownApp>;
