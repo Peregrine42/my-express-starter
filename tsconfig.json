@@ -14,7 +14,7 @@
     "strict": true,
     "checkJs": true
   },
-  "include": ["./src/**/*.ts", "./.pi/**/*.ts", "./test/**/*.ts"],
+  "include": ["./src/**/*", "./.pi/**/*", "./test/**/*", "./tsdown/**/*"],
   "exclude": [
     "node_modules",
     "**/node_modules/*",

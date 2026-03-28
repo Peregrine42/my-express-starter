@@ -21,7 +21,7 @@ declare global {
   });
 
   await startApp();
-  console.log("🚀 Server launched — happy coding!");
+  console.log("🚀 Server launched!");
 })().catch((e) => {
   process.exitCode = 1;
   console.error(e);

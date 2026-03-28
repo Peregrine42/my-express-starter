@@ -1,4 +1,5 @@
 import { defineConfig } from "tsdown";
+import { alwaysBundle } from "./tsdown/alwaysBundle.tsdown.config.ts";
 
 export default defineConfig({
   clean: true,
@@ -11,7 +12,7 @@ export default defineConfig({
     entryFileNames: "src/[name].js",
   },
   deps: {
-    alwaysBundle: [],
+    alwaysBundle,
   },
   checks: {
     legacyCjs: false,
