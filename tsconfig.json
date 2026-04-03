@@ -12,9 +12,16 @@
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     "strict": true,
-    "checkJs": true
+    "checkJs": true,
+    "types": ["vitest/globals", "node"]
   },
-  "include": ["./src/**/*", "./.pi/**/*", "./test/**/*", "./tsdown/**/*"],
+  "include": [
+    "./src/**/*",
+    ".pi/**/*",
+    "./test/**/*",
+    "./tsdown/**/*",
+    "vitest*.ts"
+  ],
   "exclude": [
     "node_modules",
     "**/node_modules/*",

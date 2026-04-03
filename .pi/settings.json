@@ -1,0 +1,11 @@
+{
+  "lastChangelogVersion": "0.64.0",
+  "packages": [
+    "../node_modules/pi-brain",
+    "../node_modules/pi-plan-md",
+    "../node_modules/@soleone/pi-tasks"
+  ],
+  "defaultProvider": "zai",
+  "defaultModel": "glm-5-turbo",
+  "defaultThinkingLevel": "medium"
+}

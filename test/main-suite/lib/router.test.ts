@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import express, { Router } from "express";
 import { configureAndAttachRoutes } from "../../../src/lib/getRouter";
 import inject from "light-my-request";
@@ -82,9 +83,7 @@ describe("when a handler is not defined", () => {
 describe("error handling in route wrappers", () => {
   it("catches errors from a regular route handler and forwards to Express error handler", async () => {
     // ARRANGE
-    const consoleSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const router = Router();
 
     class ThrowingController extends BaseController {
@@ -121,9 +120,7 @@ describe("error handling in route wrappers", () => {
 
   it("catches errors from a custom 404 handler and forwards to Express error handler", async () => {
     // ARRANGE
-    const consoleSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const router = Router();
 
     class Throwing404Controller extends BaseController {
@@ -160,9 +157,7 @@ describe("error handling in route wrappers", () => {
 
   it("catches errors from the default 404 fallback and forwards to Express error handler", async () => {
     // ARRANGE
-    const consoleSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const router = Router();
 
     // No routes and no custom 404 — the default FALLBACK path

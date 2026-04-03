@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { getApp, ShutdownApp } from "../../../src/lib/getApp";
 import { ConsoleOverride } from "../../../src/lib/conslLogging";
 import axios from "axios";
@@ -18,7 +18,7 @@ describe("App", () => {
           });
         },
         consoleOverride: {
-          log: jest.fn(),
+          log: vi.fn(),
         },
       });
       shutdown = await startApp();
@@ -32,12 +32,8 @@ describe("App", () => {
 
     it("can do custom functionality after listening for requests", async () => {
       // ARRANGE
-      const customShutdownCallback = jest
-        .fn()
-        .mockImplementation(async () => {});
-      const customStartupCallback = jest
-        .fn()
-        .mockImplementation(async () => {});
+      const customShutdownCallback = vi.fn().mockImplementation(async () => {});
+      const customStartupCallback = vi.fn().mockImplementation(async () => {});
       const [_app, startApp] = await getApp({
         withAppStartupComplete: async () => {
           await customStartupCallback();
@@ -47,7 +43,7 @@ describe("App", () => {
           };
         },
         consoleOverride: {
-          log: jest.fn(),
+          log: vi.fn(),
         },
       });
       shutdown = await startApp();
@@ -91,7 +87,7 @@ describe("App", () => {
       },
       consoleOverride: {
         ...console,
-        error: jest.fn(),
+        error: vi.fn(),
       } as ConsoleOverride,
     });
 
@@ -112,8 +108,8 @@ describe("App", () => {
         },
         consoleOverride: {
           ...console,
-          error: jest.fn(),
-          log: jest.fn(),
+          error: vi.fn(),
+          log: vi.fn(),
         } as ConsoleOverride,
       });
 

@@ -1,10 +1,8 @@
-import "jest-puppeteer";
-import "expect-puppeteer";
-import { env } from "../../src/env";
 import { E2E_SESSION_ID } from "./globalSetup";
+import { env } from "../../src/env";
 
 const getCounterValue = async () => {
-  return page.$eval('[data-testid="counter-value"]', (el) => {
+  return page.$eval('[data-testid="counter-value"]', (el: any) => {
     return el.textContent ?? "";
   });
 };

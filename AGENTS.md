@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A full-stack web application built with Express 5 (backend) and React (frontend). The backend renders Pug templates and serves them along with React-bundled frontend assets. Session state is managed via Redis. Tests include unit tests (Jest + light-my-request), frontend tests (Jest + React Testing Library), and E2E tests (Jest + Puppeteer).
+A full-stack web application built with Express 5 (backend) and React (frontend). The backend renders Pug templates and serves them along with React-bundled frontend assets. Session state is managed via Redis. Tests include unit tests (Vitest + light-my-request), frontend tests (Vitest + React Testing Library), and E2E tests (Vitest + Puppeteer).
 
 ## Architecture
 
@@ -39,8 +39,8 @@ A full-stack web application built with Express 5 (backend) and React (frontend)
 | Bundler    | tsdown (both backend and frontend)    |
 | Linting    | ESLint (typescript-eslint) + Prettier |
 | Spelling   | cspell                                |
-| Unit Tests | Jest (backend + frontend)             |
-| E2E Tests  | Jest + jest-puppeteer                 |
+| Unit Tests | Vitest (backend + frontend)           |
+| E2E Tests  | Vitest + Puppeteer                    |
 
 ### Middleware Order (`src/index.ts`)
 
@@ -76,8 +76,8 @@ All commands are run from the project root.
 | `npm run build`         | Build both backend and frontend               |
 | `npm start`             | Start the built backend server                |
 | `npm test`              | Run all tests (backend, frontend, e2e)        |
-| `npm run backend:test`  | Build and run backend unit tests              |
-| `npm run frontend:test` | Build and run frontend tests                  |
+| `npm run backend:test`  | Type-check, lint, and run backend unit tests  |
+| `npm run frontend:test` | Run frontend tests                            |
 | `npm run test:e2e`      | Build and run E2E tests                       |
 | `npm run lint`          | Run Prettier (write) then ESLint              |
 | `npm run tsc`           | Type-check only (no emit)                     |
@@ -116,19 +116,21 @@ my-app/
 ├── views/                  # Pug templates
 ├── public/                 # Static assets (favicon)
 │   └── pages/              # Frontend build output (gitignored)
+├── vitest.config.ts        # Backend unit test configuration
+├── vitest.config.e2e.ts    # E2E test configuration
 ├── test/                   # Backend & E2E tests (TypeScript source)
 │   ├── main-suite/         # Backend unit tests
 │   ├── e2e-suite/          # Puppeteer E2E tests
+│   ├── helpers/            # Shared test helpers
 │   └── setupTests.ts       # Test setup entry
 └── dist/                   # Backend build output (gitignored)
 ```
 
 ## Testing
 
-- **Backend tests:** TypeScript files in `test/main-suite/` are bundled to CJS via tsdown, then executed by Jest with `light-my-request` for HTTP testing. Test setup uses `setupController` for injecting controllers into an Express app with session middleware.
+- **Backend tests:** TypeScript files in `test/main-suite/` run directly by Vitest with `light-my-request` for HTTP testing. Test setup uses `setupController` for injecting controllers into an Express app with session middleware.
 - **Frontend tests:** React components tested with `@testing-library/react` in jsdom.
-- **E2E tests:** Puppeteer tests in `test/e2e-suite/` that drive a real browser against the running app. The server is started once via `globalSetup` (composing jest-puppeteer's browser launch) and shared across all E2E test files. Session state is seeded in Redis and a cookie set via `page.setCookie()` in test `beforeAll` hooks.
-- **Test builds:** Tests are compiled with `tsdown.test.config.mts` (CJS, inline sourcemaps) before execution.
+- **E2E tests:** Puppeteer tests in `test/e2e-suite/` that drive a real browser against the running app. The server is started once via `globalSetup` and shared across all E2E test files. Session state is seeded in Redis and a cookie set via `page.setCookie()` in test `beforeAll` hooks.
 
 ## Adding a New Route
 

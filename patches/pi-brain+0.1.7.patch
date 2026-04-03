@@ -1,0 +1,26 @@
+diff --git a/node_modules/pi-brain/agents/memory-committer.md b/node_modules/pi-brain/agents/memory-committer.md
+index 50d0db2..d48363e 100644
+--- a/node_modules/pi-brain/agents/memory-committer.md
++++ b/node_modules/pi-brain/agents/memory-committer.md
+@@ -2,7 +2,7 @@
+ name: memory-committer
+ description: Distills OTA logs into structured memory commit entries
+ tools: read, grep, find, ls
+-model: google-antigravity/gemini-3-flash
++model: zai/glm-4.5-flash
+ skills: brain
+ extensions:
+ ---
+diff --git a/node_modules/pi-brain/src/subagent.ts b/node_modules/pi-brain/src/subagent.ts
+index e360475..25472af 100644
+--- a/node_modules/pi-brain/src/subagent.ts
++++ b/node_modules/pi-brain/src/subagent.ts
+@@ -6,7 +6,7 @@ import * as path from "node:path";
+ import type { SubagentResult } from "./types.js";
+ import { parseYaml } from "./yaml.js";
+ 
+-const COMMITTER_MODEL = "google-antigravity/gemini-3-flash";
++const COMMITTER_MODEL = "zai/glm-4.5-flash";
+ const COMMITTER_TOOLS = "read,grep,find,ls";
+ 
+ interface AgentDefinition {

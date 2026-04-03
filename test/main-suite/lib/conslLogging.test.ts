@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import express from "express";
 import { setupConslLogging } from "../../../src/lib/conslLogging";
 import inject from "light-my-request";
@@ -51,7 +51,7 @@ describe("log", () => {
   it("takes a payload acceptable by console.error", () => {
     // ARRANGE
     const [consl] = setupConslLogging({
-      consoleOverride: { error: jest.fn() },
+      consoleOverride: { error: vi.fn() },
     });
 
     const e = new Error("Oops!");
@@ -63,7 +63,7 @@ describe("log", () => {
   it("can optionally take the request object to give more context", () => {
     // ARRANGE
     const [consl] = setupConslLogging({
-      consoleOverride: { log: jest.fn() },
+      consoleOverride: { log: vi.fn() },
     });
 
     // ACT + ASSERT
@@ -78,7 +78,7 @@ describe("log", () => {
   it("can optionally take a request ID to trace response logging to a particular request", () => {
     // ARRANGE
     const [consl] = setupConslLogging({
-      consoleOverride: { error: jest.fn(), log: jest.fn() },
+      consoleOverride: { error: vi.fn(), log: vi.fn() },
     });
 
     // ACT + ASSERT
@@ -102,23 +102,10 @@ describe("log", () => {
   it("just logs to the console", () => {
     // ARRANGE
     const [consl] = setupConslLogging({
-      consoleOverride: { log: jest.fn() },
+      consoleOverride: { log: vi.fn() },
     });
 
     // ACT + ASSERT
     expect(consl("log", "foo")).toEqual(["LOG", "foo"]);
-  });
-
-  afterEach(() => {
-    // @ts-expect-error Mock
-    if (console?.log?.mockClear) {
-      // @ts-expect-error Mock
-      console.log.mockClear();
-    }
-    // @ts-expect-error Mock
-    if (console?.error?.mockClear) {
-      // @ts-expect-error Mock
-      console.error.mockClear();
-    }
   });
 });

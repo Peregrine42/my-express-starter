@@ -1,43 +1,79 @@
+import type { TestProject } from "vitest/node";
 import Redis from "ioredis";
-import { getApp, ShutdownApp } from "../../src/lib/getApp";
+import puppeteer from "puppeteer";
+import { getApp, type ShutdownApp } from "../../src/lib/getApp";
 import { attachAppMiddleware } from "../../src/lib/attachMiddleware";
 
-export const E2E_SESSION_ID = "e2e-test-session";
+const E2E_SESSION_ID = "e2e-test-session";
 
-declare global {
-  var appShutdown: ShutdownApp;
-}
+export default function setup(project: TestProject) {
+  let appShutdown: ShutdownApp;
+  let browser: Awaited<ReturnType<typeof puppeteer.launch>>;
 
-export default async function globalSetup(jestConfig: {
-  maxWorkers?: number | string;
-  watch?: boolean;
-  watchAll?: boolean;
-  rootDir?: string;
-}) {
-  // Seed a session in Redis so the counter page can authenticate
-  const sessionRedis = new Redis({ keyPrefix: "session::" });
-  try {
-    await sessionRedis.set(E2E_SESSION_ID, "present");
-  } finally {
-    sessionRedis.disconnect();
-  }
-  // Clean any stale counter value from previous runs
-  const counterRedis = new Redis({ keyPrefix: "session:counter:" });
-  try {
-    await counterRedis.del(E2E_SESSION_ID);
-  } finally {
-    counterRedis.disconnect();
-  }
-  // Start the app server
-  const [app, appStartup] = await getApp({
-    consoleOverride: {
-      log: () => {},
-    },
+  project.onTestsRerun(async () => {
+    // Restart server and browser on test reruns
+    await browser.close();
+    await appShutdown();
+    await startServerAndBrowser(project);
   });
-  await attachAppMiddleware(app);
-  global.appShutdown = await appStartup();
 
-  // Launch the browser via jest-puppeteer's setup
-  const setup = require("jest-environment-puppeteer/setup");
-  await setup(jestConfig);
+  async function startServerAndBrowser(project: TestProject) {
+    // Seed a session in Redis so the counter page can authenticate
+    const sessionRedis = new Redis({ keyPrefix: "session::" });
+    try {
+      await sessionRedis.set(E2E_SESSION_ID, "present");
+    } finally {
+      sessionRedis.disconnect();
+    }
+    // Clean any stale counter value from previous runs
+    const counterRedis = new Redis({ keyPrefix: "session:counter:" });
+    try {
+      await counterRedis.del(E2E_SESSION_ID);
+    } finally {
+      counterRedis.disconnect();
+    }
+
+    // Start the app server
+    const [app, appStartup] = await getApp({
+      consoleOverride: {
+        log: () => {},
+      },
+    });
+    await attachAppMiddleware(app);
+    appShutdown = await appStartup();
+
+    // Launch the browser
+    browser = await puppeteer.launch();
+    project.provide("wsEndpoint", browser.wsEndpoint());
+  }
+
+  // Initial setup
+  return startServerAndBrowser(project).then(async () => {
+    return async () => {
+      await appShutdown();
+      await browser.close();
+
+      // Clean up the seeded session and counter
+      const teardownSessionRedis = new Redis({ keyPrefix: "session::" });
+      try {
+        await teardownSessionRedis.del(E2E_SESSION_ID);
+      } finally {
+        teardownSessionRedis.disconnect();
+      }
+      const teardownCounterRedis = new Redis({ keyPrefix: "session:counter:" });
+      try {
+        await teardownCounterRedis.del(E2E_SESSION_ID);
+      } finally {
+        teardownCounterRedis.disconnect();
+      }
+    };
+  });
 }
+
+declare module "vitest" {
+  export interface ProvidedContext {
+    wsEndpoint: string;
+  }
+}
+
+export { E2E_SESSION_ID };

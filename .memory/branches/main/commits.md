@@ -183,3 +183,21 @@ Brain was initialized with project orientation documenting the Express 5 backend
 
 - Removed unnecessary non-null assertion (`!`) on `req.cookies` in SessionCounter.ts—`@types/cookie-parser` augments `Express.Request.cookies` to `Record<string, any>`, which is always defined, so `req.cookies.session = sessionId` type-checks cleanly without any assertion
 - Lesson learned: check what type augmentations libraries already provide before reaching for `!`—many libraries (like cookie-parser) declare their types precisely to make downstream usage safe without assertions
+
+---
+
+## Commit 5b5ea103 | 2026-04-03T03:16:11.596Z
+
+### Branch Purpose
+
+The main branch tracks ongoing project memory for the Express 5 + React 19 full-stack application, capturing key decisions, architectural insights, and implementation learnings as the codebase evolves.
+
+### Previous Progress Summary
+
+The previous progress was captured in commit 46297a0c, which documented the removal of an unnecessary non-null assertion on `req.cookies` in SessionCounter.ts, learning that `@types/cookie-parser` already augments `Express.Request.cookies` to `Record<string, any>`, making the assertion unnecessary. Before that, the project had established a robust testing infrastructure with 66 backend tests at 100% coverage, implemented decrement counter functionality using method-override patterns, extracted shared middleware logic, and resolved ESM-only package compatibility issues through custom tsdown configurations.
+
+### This Commit's Contribution
+
+- Fixed pi-brain memory_committer model configuration by replacing hardcoded `google-antigravity/gemini-3-flash` with `zai/glm-4.5-flash` using patch-package
+- The change was necessary because the `google-antigravity` provider has no API key configured in the current environment
+- This ensures the memory commit functionality works properly by using an available provider with proper credentials
