@@ -56,6 +56,11 @@ export class SessionCounter extends BaseController {
     return result.rows[0].value;
   };
 
+  private resetCounter = async (userId: number): Promise<void> => {
+    const pool = getPool();
+    await pool.query(`DELETE FROM counters WHERE user_id = $1`, [userId]);
+  };
+
   private decrementCounter = async (userId: number): Promise<number> => {
     const pool = getPool();
     const result = await pool.query(
@@ -83,8 +88,8 @@ export class SessionCounter extends BaseController {
     }
 
     const userId = await this.getUserId(req, res);
-    const value = await this.incrementCounter(userId);
-    res.render("counter", { value });
+    await this.incrementCounter(userId);
+    res.redirect("/counter");
   };
 
   DELETE = async (req: express.Request, res: express.Response) => {
@@ -93,7 +98,17 @@ export class SessionCounter extends BaseController {
     }
 
     const userId = await this.getUserId(req, res);
-    const value = await this.decrementCounter(userId);
-    res.render("counter", { value });
+    await this.decrementCounter(userId);
+    res.redirect("/counter");
+  };
+
+  PUT = async (req: express.Request, res: express.Response) => {
+    if (!(await this.ensureLoggedIn(req, res))) {
+      return;
+    }
+
+    const userId = await this.getUserId(req, res);
+    await this.resetCounter(userId);
+    res.redirect("/counter");
   };
 }

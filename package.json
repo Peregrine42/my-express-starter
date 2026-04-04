@@ -53,7 +53,12 @@
   "overrides": {
     "yauzl": "3.2.1",
     "flatted": "3.4.2",
-    "typescript": "6.0.2"
+    "typescript": "6.0.2",
+    "ajv": "8.18.0",
+    "eslint": {
+      "ajv": "6.14.0"
+    },
+    "lodash": "4.18.1"
   },
   "scripts": {
     "db:create": "node --env-file=.env --import tsx src/migrations/create.ts",

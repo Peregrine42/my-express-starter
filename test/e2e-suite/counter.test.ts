@@ -48,5 +48,23 @@ describe("counter e2e", (): void => {
     await decrementButton().click();
     await page.waitForLoadState("networkidle");
     expect(await getCounterValue()).toBe("0");
+
+    // Click "Reset" via _method=put form
+    const resetButton = () => {
+      return page.locator('input[type="submit"][value="Reset"]');
+    };
+
+    // Increment then reset
+    await incrementButton().click();
+    await page.waitForLoadState("networkidle");
+    expect(await getCounterValue()).toBe("1");
+
+    await incrementButton().click();
+    await page.waitForLoadState("networkidle");
+    expect(await getCounterValue()).toBe("2");
+
+    await resetButton().click();
+    await page.waitForLoadState("networkidle");
+    expect(await getCounterValue()).toBe("0");
   });
 });

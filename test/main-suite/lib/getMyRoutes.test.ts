@@ -12,6 +12,7 @@ describe("getMyRoutes", () => {
       "GET /counter",
       "POST /counter",
       "DELETE /counter",
+      "PUT /counter",
     ]);
 
     // Spot-check the home route
@@ -26,5 +27,6 @@ describe("getMyRoutes", () => {
     expect(routes["GET /counter"][1]).toEqual("GET");
     expect(routes["POST /counter"][1]).toEqual("POST");
     expect(routes["DELETE /counter"][1]).toEqual("DELETE");
+    expect(routes["PUT /counter"][1]).toEqual("PUT");
   });
 });

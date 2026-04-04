@@ -13,6 +13,7 @@ export function getMyRoutes() {
     "GET /counter": [SessionCounter, "GET"],
     "POST /counter": [SessionCounter, "POST"],
     "DELETE /counter": [SessionCounter, "DELETE"],
+    "PUT /counter": [SessionCounter, "PUT"],
   };
 
   return routes;

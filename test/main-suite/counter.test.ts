@@ -103,6 +103,13 @@ describe("the counter", () => {
       expect(response.statusCode).toEqual(302);
       expect(response.headers.location).toEqual("/login");
     });
+
+    it("PUT redirects to /login", async () => {
+      const [dispatch] = await setupMyController([SessionCounter, "PUT"]);
+      const { response } = await dispatch({ method: "PUT" });
+      expect(response.statusCode).toEqual(302);
+      expect(response.headers.location).toEqual("/login");
+    });
   });
 
   describe("with a stale session cookie (present in Redis as absent)", () => {
@@ -138,6 +145,17 @@ describe("the counter", () => {
       expect(response.statusCode).toEqual(302);
       expect(response.headers.location).toEqual("/login");
     });
+
+    it("PUT redirects to /login", async () => {
+      const { headers } = await seedStaleSession(
+        existingSessionId,
+        allowedSessionObjectKeys,
+      );
+      const [dispatch] = await setupMyController([SessionCounter, "PUT"]);
+      const { response } = await dispatch({ method: "PUT", headers });
+      expect(response.statusCode).toEqual(302);
+      expect(response.headers.location).toEqual("/login");
+    });
   });
 
   describe("with a logged-in session", () => {
@@ -159,13 +177,27 @@ describe("the counter", () => {
       wasCalledWith(res, "render", "counter", { value: 0 });
     });
 
-    it("increments the counter on POST", async () => {
+    it("POST increments the counter and redirects to GET /counter", async () => {
       const { headers } = await seedLoggedInSession(
         existingSessionId,
         testUserId,
       );
-      const [dispatch] = await setupMyController([SessionCounter, "POST"]);
-      const { res, response } = await dispatch({ method: "POST", headers });
+      const [postDispatch] = await setupMyController([SessionCounter, "POST"]);
+      const { response } = await postDispatch({ method: "POST", headers });
+      expect(response.statusCode).toEqual(302);
+      expect(response.headers.location).toEqual("/counter");
+    });
+
+    it("POST persists the increment, visible on subsequent GET", async () => {
+      const { headers } = await seedLoggedInSession(
+        existingSessionId,
+        testUserId,
+      );
+      const [postDispatch] = await setupMyController([SessionCounter, "POST"]);
+      await postDispatch({ method: "POST", headers });
+
+      const [getDispatch] = await setupMyController([SessionCounter, "GET"]);
+      const { res, response } = await getDispatch({ headers });
       expect(response.statusCode).toEqual(200);
       wasCalledWith(res, "render", "counter", { value: 1 });
     });
@@ -175,23 +207,46 @@ describe("the counter", () => {
         existingSessionId,
         testUserId,
       );
-      const [dispatch] = await setupMyController([SessionCounter, "POST"]);
-      await dispatch({ method: "POST", headers });
-      const { res, response } = await dispatch({ method: "POST", headers });
+      const [postDispatch] = await setupMyController([SessionCounter, "POST"]);
+      await postDispatch({ method: "POST", headers });
+      await postDispatch({ method: "POST", headers });
+
+      const [getDispatch] = await setupMyController([SessionCounter, "GET"]);
+      const { res, response } = await getDispatch({ headers });
       expect(response.statusCode).toEqual(200);
       wasCalledWith(res, "render", "counter", { value: 2 });
     });
 
-    it("decrements the counter on DELETE", async () => {
+    it("DELETE decrements the counter and redirects to GET /counter", async () => {
       const { headers } = await seedLoggedInSession(
         existingSessionId,
         testUserId,
       );
-      const [dispatch] = await setupMyController([SessionCounter, "DELETE"]);
-      const { res, response } = await dispatch({
+      const [deleteDispatch] = await setupMyController([
+        SessionCounter,
+        "DELETE",
+      ]);
+      const { response } = await deleteDispatch({
         method: "DELETE",
         headers,
       });
+      expect(response.statusCode).toEqual(302);
+      expect(response.headers.location).toEqual("/counter");
+    });
+
+    it("DELETE persists the decrement, visible on subsequent GET", async () => {
+      const { headers } = await seedLoggedInSession(
+        existingSessionId,
+        testUserId,
+      );
+      const [deleteDispatch] = await setupMyController([
+        SessionCounter,
+        "DELETE",
+      ]);
+      await deleteDispatch({ method: "DELETE", headers });
+
+      const [getDispatch] = await setupMyController([SessionCounter, "GET"]);
+      const { res, response } = await getDispatch({ headers });
       expect(response.statusCode).toEqual(200);
       wasCalledWith(res, "render", "counter", { value: -1 });
     });
@@ -201,14 +256,50 @@ describe("the counter", () => {
         existingSessionId,
         testUserId,
       );
-      const [dispatch] = await setupMyController([SessionCounter, "DELETE"]);
-      await dispatch({ method: "DELETE", headers });
-      const { res, response } = await dispatch({
-        method: "DELETE",
-        headers,
-      });
+      const [deleteDispatch] = await setupMyController([
+        SessionCounter,
+        "DELETE",
+      ]);
+      await deleteDispatch({ method: "DELETE", headers });
+      await deleteDispatch({ method: "DELETE", headers });
+
+      const [getDispatch] = await setupMyController([SessionCounter, "GET"]);
+      const { res, response } = await getDispatch({ headers });
       expect(response.statusCode).toEqual(200);
       wasCalledWith(res, "render", "counter", { value: -2 });
+    });
+
+    it("PUT resets the counter and redirects to GET /counter", async () => {
+      const { headers } = await seedLoggedInSession(
+        existingSessionId,
+        testUserId,
+      );
+      const [putDispatch] = await setupMyController([SessionCounter, "PUT"]);
+      const { response } = await putDispatch({ method: "PUT", headers });
+      expect(response.statusCode).toEqual(302);
+      expect(response.headers.location).toEqual("/counter");
+    });
+
+    it("PUT resets the counter to 0, visible on subsequent GET", async () => {
+      const { headers } = await seedLoggedInSession(
+        existingSessionId,
+        testUserId,
+      );
+
+      // Increment first
+      const [postDispatch] = await setupMyController([SessionCounter, "POST"]);
+      await postDispatch({ method: "POST", headers });
+      await postDispatch({ method: "POST", headers });
+
+      // Reset
+      const [putDispatch] = await setupMyController([SessionCounter, "PUT"]);
+      await putDispatch({ method: "PUT", headers });
+
+      // Should be back to 0
+      const [getDispatch] = await setupMyController([SessionCounter, "GET"]);
+      const { res, response } = await getDispatch({ headers });
+      expect(response.statusCode).toEqual(200);
+      wasCalledWith(res, "render", "counter", { value: 0 });
     });
   });
 });
