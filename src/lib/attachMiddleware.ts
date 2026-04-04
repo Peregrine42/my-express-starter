@@ -12,7 +12,7 @@ export async function attachAppMiddleware(
 
   app.use(
     "/",
-    sessionSetupMiddleware({ allowedSessionObjectKeys: ["counter"] }),
+    sessionSetupMiddleware({ allowedSessionObjectKeys: ["user_id"] }),
   );
   app.use(express.urlencoded({ extended: false }));
   app.use(

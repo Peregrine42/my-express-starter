@@ -6,6 +6,9 @@ describe("getMyRoutes", () => {
 
     expect(Object.keys(routes)).toEqual([
       "GET /",
+      "GET /login",
+      "POST /login",
+      "POST /logout",
       "GET /counter",
       "POST /counter",
       "DELETE /counter",
@@ -13,6 +16,11 @@ describe("getMyRoutes", () => {
 
     // Spot-check the home route
     expect(routes["GET /"][1]).toEqual("GET");
+
+    // Spot-check the login routes
+    expect(routes["GET /login"][1]).toEqual("GET");
+    expect(routes["POST /login"][1]).toEqual("POST");
+    expect(routes["POST /logout"][1]).toEqual("POST");
 
     // Spot-check the counter GET route
     expect(routes["GET /counter"][1]).toEqual("GET");

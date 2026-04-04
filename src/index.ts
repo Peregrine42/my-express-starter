@@ -2,6 +2,7 @@ import { getApp } from "./lib/getApp";
 import { attachAppMiddleware } from "./lib/attachMiddleware";
 import { envVarNames } from "./env";
 import { validateEnv } from "./lib/env";
+import { createMigrator } from "./migrations/runner";
 
 declare global {
   namespace Express {
@@ -15,6 +16,13 @@ declare global {
   validateEnv(envVarNames);
 
   const [_app, startApp] = await getApp({
+    beforeAppStartup: async () => {
+      const migrator = createMigrator();
+      const pending = await migrator.pending();
+      if (pending.length > 0) {
+        await migrator.up();
+      }
+    },
     withApp: (app) => {
       return attachAppMiddleware(app);
     },

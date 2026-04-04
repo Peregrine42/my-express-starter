@@ -1,57 +1,99 @@
 import express from "express";
 import { BaseController } from "../lib/Controller";
-import {
-  generateSessionId,
-  getStringValueFromSession,
-  incrementNumericStringValueFromSession,
-  decrementNumericStringValueFromSession,
-  hasSession,
-  setupSession,
-} from "../lib/session";
+import { getStringValueFromSession, hasSession } from "../lib/session";
+import { getPool } from "../lib/db";
 
 export class SessionCounter extends BaseController {
-  private ensureSession = async (
+  private getUserId = async (
     req: express.Request,
     res: express.Response,
-  ) => {
-    if (await hasSession(req, res)) {
-      return;
+  ): Promise<number> => {
+    const userIdStr = await getStringValueFromSession(req, res, "user_id");
+    if (!userIdStr) {
+      return -1;
+    }
+    return Number(userIdStr);
+  };
+
+  private ensureLoggedIn = async (
+    req: express.Request,
+    res: express.Response,
+  ): Promise<boolean> => {
+    if (!req.cookies?.session || !(await hasSession(req, res))) {
+      res.redirect("/login");
+      return false;
     }
 
-    const sessionId = generateSessionId();
-    await setupSession(req, res, sessionId);
-    res.cookie("session", sessionId, { path: "/" });
-    req.cookies.session = sessionId;
+    const userId = await this.getUserId(req, res);
+    if (!userId || userId < 0) {
+      res.redirect("/login");
+      return false;
+    }
+
+    return true;
+  };
+
+  private getCounter = async (userId: number): Promise<number> => {
+    const pool = getPool();
+    const result = await pool.query(
+      `SELECT value FROM counters WHERE user_id = $1`,
+      [userId],
+    );
+    if (result.rows.length === 0) {
+      return 0;
+    }
+    return result.rows[0].value;
+  };
+
+  private incrementCounter = async (userId: number): Promise<number> => {
+    const pool = getPool();
+    const result = await pool.query(
+      `INSERT INTO counters (user_id, value) VALUES ($1, 1)
+       ON CONFLICT (user_id) DO UPDATE SET value = counters.value + 1
+       RETURNING value`,
+      [userId],
+    );
+    return result.rows[0].value;
+  };
+
+  private decrementCounter = async (userId: number): Promise<number> => {
+    const pool = getPool();
+    const result = await pool.query(
+      `INSERT INTO counters (user_id, value) VALUES ($1, -1)
+       ON CONFLICT (user_id) DO UPDATE SET value = counters.value - 1
+       RETURNING value`,
+      [userId],
+    );
+    return result.rows[0].value;
   };
 
   GET = async (req: express.Request, res: express.Response) => {
-    await this.ensureSession(req, res);
+    if (!(await this.ensureLoggedIn(req, res))) {
+      return;
+    }
 
-    const counter = Number(
-      (await getStringValueFromSession(req, res, "counter")) || "0",
-    );
-    res.render("counter", { value: counter });
+    const userId = await this.getUserId(req, res);
+    const value = await this.getCounter(userId);
+    res.render("counter", { value });
   };
 
   POST = async (req: express.Request, res: express.Response) => {
-    await this.ensureSession(req, res);
+    if (!(await this.ensureLoggedIn(req, res))) {
+      return;
+    }
 
-    const value = await incrementNumericStringValueFromSession(
-      req,
-      res,
-      "counter",
-    );
+    const userId = await this.getUserId(req, res);
+    const value = await this.incrementCounter(userId);
     res.render("counter", { value });
   };
 
   DELETE = async (req: express.Request, res: express.Response) => {
-    await this.ensureSession(req, res);
+    if (!(await this.ensureLoggedIn(req, res))) {
+      return;
+    }
 
-    const value = await decrementNumericStringValueFromSession(
-      req,
-      res,
-      "counter",
-    );
+    const userId = await this.getUserId(req, res);
+    const value = await this.decrementCounter(userId);
     res.render("counter", { value });
   };
 }

@@ -9,7 +9,9 @@
     "lodash": "4.18.1",
     "method-override": "3.0.0",
     "p-map": "7.0.4",
-    "pug": "3.0.4"
+    "pg": "8.20.0",
+    "pug": "3.0.4",
+    "umzug": "3.8.2"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -25,6 +27,7 @@
     "@types/lodash": "4.17.24",
     "@types/method-override": "3.0.0",
     "@types/node": "25.5.2",
+    "@types/pg": "8.20.0",
     "@types/redis": "4.0.11",
     "@vitest/coverage-v8": "4.1.2",
     "axios": "1.14.0",
@@ -42,6 +45,7 @@
     "playwright": "1.59.1",
     "prettier": "3.8.1",
     "tsdown": "0.21.7",
+    "tsx": "4.21.0",
     "typescript": "6.0.2",
     "typescript-eslint": "8.58.0",
     "vitest": "4.1.2"
@@ -52,6 +56,10 @@
     "typescript": "6.0.2"
   },
   "scripts": {
+    "db:create": "node --env-file=.env --import tsx src/migrations/create.ts",
+    "db:up": "node --env-file=.env --import tsx src/migrations/run.ts up",
+    "db:down": "node --env-file=.env --import tsx src/migrations/run.ts down",
+    "db:status": "node --env-file=.env --import tsx src/migrations/run.ts status",
     "frontend:install": "cd frontend/ && npm i -- ",
     "frontend:build": "cd frontend/ && npm run build",
     "frontend:start": "cd frontend/ && npm start",

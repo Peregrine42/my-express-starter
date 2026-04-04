@@ -3,8 +3,10 @@ import Redis from "ioredis";
 import { chromium, type BrowserServer } from "playwright";
 import { getApp, type ShutdownApp } from "../../src/lib/getApp";
 import { attachAppMiddleware } from "../../src/lib/attachMiddleware";
+import { getPool } from "../../src/lib/db";
 
 const E2E_SESSION_ID = "e2e-test-session";
+const E2E_USERNAME = "e2e-test-user";
 
 export default function setup(project: TestProject) {
   let appShutdown: ShutdownApp;
@@ -18,19 +20,39 @@ export default function setup(project: TestProject) {
   });
 
   async function startServerAndBrowser(project: TestProject) {
-    // Seed a session in Redis so the counter page can authenticate
+    const pool = getPool();
+
+    // Seed a user in Postgres for E2E tests
+    const userResult = await pool.query(
+      `INSERT INTO users (username) VALUES ($1)
+       ON CONFLICT (username) DO NOTHING
+       RETURNING id`,
+      [E2E_USERNAME],
+    );
+    const userId =
+      userResult.rows.length > 0
+        ? userResult.rows[0].id
+        : (
+            await pool.query(`SELECT id FROM users WHERE username = $1`, [
+              E2E_USERNAME,
+            ])
+          ).rows[0].id;
+
+    // Clean any stale counter for this user
+    await pool.query(`DELETE FROM counters WHERE user_id = $1`, [userId]);
+
+    // Seed a session in Redis with user_id
     const sessionRedis = new Redis({ keyPrefix: "session::" });
     try {
       await sessionRedis.set(E2E_SESSION_ID, "present");
     } finally {
       sessionRedis.disconnect();
     }
-    // Clean any stale counter value from previous runs
-    const counterRedis = new Redis({ keyPrefix: "session:counter:" });
+    const userIdRedis = new Redis({ keyPrefix: "session:user_id:" });
     try {
-      await counterRedis.del(E2E_SESSION_ID);
+      await userIdRedis.set(E2E_SESSION_ID, String(userId));
     } finally {
-      counterRedis.disconnect();
+      userIdRedis.disconnect();
     }
 
     // Start the app server
@@ -60,11 +82,26 @@ export default function setup(project: TestProject) {
       } finally {
         teardownSessionRedis.disconnect();
       }
-      const teardownCounterRedis = new Redis({ keyPrefix: "session:counter:" });
+      const teardownUserIdRedis = new Redis({ keyPrefix: "session:user_id:" });
       try {
-        await teardownCounterRedis.del(E2E_SESSION_ID);
+        await teardownUserIdRedis.del(E2E_SESSION_ID);
       } finally {
-        teardownCounterRedis.disconnect();
+        teardownUserIdRedis.disconnect();
+      }
+
+      // Clean up the E2E user and counter from Postgres
+      const pool = getPool();
+      const userResult = await pool.query(
+        `SELECT id FROM users WHERE username = $1`,
+        [E2E_USERNAME],
+      );
+      if (userResult.rows.length > 0) {
+        await pool.query(`DELETE FROM counters WHERE user_id = $1`, [
+          userResult.rows[0].id,
+        ]);
+        await pool.query(`DELETE FROM users WHERE id = $1`, [
+          userResult.rows[0].id,
+        ]);
       }
     };
   });
