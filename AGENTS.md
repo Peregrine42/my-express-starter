@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-A full-stack web application built with Express 5 (backend) and React (frontend). The backend renders Pug templates and serves them along with React-bundled frontend assets. Session state is managed via Redis. Tests include unit tests (Vitest + light-my-request), frontend tests (Vitest + React Testing Library), and E2E tests (Vitest + Puppeteer).
+A full-stack web application built with Express 5 (backend) and React (frontend). The backend renders Pug templates and serves them along with React-bundled frontend assets. Session state is managed via Redis. Tests include unit tests (Vitest + light-my-request), frontend tests (Vitest + React Testing Library), and E2E tests (Vitest + Playwright).
 
 ## Architecture
 
@@ -40,7 +40,7 @@ A full-stack web application built with Express 5 (backend) and React (frontend)
 | Linting    | ESLint (typescript-eslint) + Prettier |
 | Spelling   | cspell                                |
 | Unit Tests | Vitest (backend + frontend)           |
-| E2E Tests  | Vitest + Puppeteer                    |
+| E2E Tests  | Vitest + Playwright                   |
 
 ### Middleware Order (`src/index.ts`)
 
@@ -120,7 +120,7 @@ my-app/
 ├── vitest.config.e2e.ts    # E2E test configuration
 ├── test/                   # Backend & E2E tests (TypeScript source)
 │   ├── main-suite/         # Backend unit tests
-│   ├── e2e-suite/          # Puppeteer E2E tests
+│   ├── e2e-suite/          # Playwright E2E tests
 │   ├── helpers/            # Shared test helpers
 │   └── setupTests.ts       # Test setup entry
 └── dist/                   # Backend build output (gitignored)
@@ -130,7 +130,7 @@ my-app/
 
 - **Backend tests:** TypeScript files in `test/main-suite/` run directly by Vitest with `light-my-request` for HTTP testing. Test setup uses `setupController` for injecting controllers into an Express app with session middleware.
 - **Frontend tests:** React components tested with `@testing-library/react` in jsdom.
-- **E2E tests:** Puppeteer tests in `test/e2e-suite/` that drive a real browser against the running app. The server is started once via `globalSetup` and shared across all E2E test files. Session state is seeded in Redis and a cookie set via `page.setCookie()` in test `beforeAll` hooks.
+- **E2E tests:** Playwright tests in `test/e2e-suite/` that drive a real browser against the running app. The server is started once via `globalSetup` and shared across all E2E test files. Session state is seeded in Redis and a cookie set via `page.context().setCookies()` in test `beforeAll` hooks.
 
 ## Adding a New Route
 

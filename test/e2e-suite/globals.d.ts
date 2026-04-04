@@ -1,8 +1,8 @@
-import type puppeteer from "puppeteer";
+import type { Browser, Page } from "playwright";
 
 declare global {
-  var browser: puppeteer.Browser;
-  var page: puppeteer.Page;
+  var browser: Browser;
+  var page: Page;
 }
 
 declare module "vitest" {

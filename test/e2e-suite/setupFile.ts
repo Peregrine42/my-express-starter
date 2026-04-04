@@ -1,8 +1,8 @@
-import puppeteer from "puppeteer";
+import { chromium } from "playwright";
 import { inject } from "vitest";
 
 const wsEndpoint = inject("wsEndpoint");
-const browser = await puppeteer.connect({ browserWSEndpoint: wsEndpoint });
+const browser = await chromium.connect(wsEndpoint);
 const page = await browser.newPage();
 
 Object.assign(globalThis, { browser, page });

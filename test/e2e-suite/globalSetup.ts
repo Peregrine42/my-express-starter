@@ -1,6 +1,6 @@
 import type { TestProject } from "vitest/node";
 import Redis from "ioredis";
-import puppeteer from "puppeteer";
+import { chromium, type BrowserServer } from "playwright";
 import { getApp, type ShutdownApp } from "../../src/lib/getApp";
 import { attachAppMiddleware } from "../../src/lib/attachMiddleware";
 
@@ -8,11 +8,11 @@ const E2E_SESSION_ID = "e2e-test-session";
 
 export default function setup(project: TestProject) {
   let appShutdown: ShutdownApp;
-  let browser: Awaited<ReturnType<typeof puppeteer.launch>>;
+  let browserServer: BrowserServer;
 
   project.onTestsRerun(async () => {
     // Restart server and browser on test reruns
-    await browser.close();
+    await browserServer.close();
     await appShutdown();
     await startServerAndBrowser(project);
   });
@@ -42,16 +42,16 @@ export default function setup(project: TestProject) {
     await attachAppMiddleware(app);
     appShutdown = await appStartup();
 
-    // Launch the browser
-    browser = await puppeteer.launch();
-    project.provide("wsEndpoint", browser.wsEndpoint());
+    // Launch the browser server
+    browserServer = await chromium.launchServer();
+    project.provide("wsEndpoint", browserServer.wsEndpoint());
   }
 
   // Initial setup
   return startServerAndBrowser(project).then(async () => {
     return async () => {
       await appShutdown();
-      await browser.close();
+      await browserServer.close();
 
       // Clean up the seeded session and counter
       const teardownSessionRedis = new Redis({ keyPrefix: "session::" });

@@ -201,3 +201,24 @@ The previous progress was captured in commit 46297a0c, which documented the remo
 - Fixed pi-brain memory_committer model configuration by replacing hardcoded `google-antigravity/gemini-3-flash` with `zai/glm-4.5-flash` using patch-package
 - The change was necessary because the `google-antigravity` provider has no API key configured in the current environment
 - This ensures the memory commit functionality works properly by using an available provider with proper credentials
+
+---
+
+## Commit fd325969 | 2026-04-04T02:40:20.189Z
+
+### Branch Purpose
+
+The main branch tracks ongoing project memory for the Express 5 + React 19 full-stack application, capturing key decisions, architectural insights, and implementation learnings as the codebase evolves.
+
+### Previous Progress Summary
+
+The previous progress was captured in commit 5b5ea103, which documented the fix for pi-brain memory_committer model configuration by replacing hardcoded `google-antigravity/gemini-3-flash` with `zai/glm-4.5-flash` using patch-package. Before that, the project had established a robust testing infrastructure with 66 backend tests at 100% coverage, implemented decrement counter functionality using method-override patterns, extracted shared middleware logic, resolved ESM-only package compatibility issues, and maintained comprehensive test coverage through dedicated test files for session handling, route configuration, type guards, and middleware attachment.
+
+### This Commit's Contribution
+
+- Migrated E2E tests from Puppeteer to Playwright, updating 5 test suite files (globalSetup.ts, setupFile.ts, globals.d.ts, counter.test.ts, full.test.ts) and core project documentation
+- Key API mappings: puppeteer.launch() → chromium.launchServer(), page.$eval() → page.locator().textContent(), page.waitForNetworkIdle() → page.waitForLoadState("networkidle"), browser.setCookie() → page.context().addCookies()
+- Updated package.json to replace puppeteer dependency with playwright, removed deprecated E2E setup notes from AGENTS.md
+- Fixed critical Playwright API issue: `context.setCookies()` → `context.addCookies()` (setCookies doesn't exist in Playwright)
+- Verified full test suite functionality: all 73 tests pass (70 backend, 1 frontend, 2 E2E) after migration
+- Maintained identical E2E test behavior while modernizing the browser automation stack and eliminating Puppeteer dependency
