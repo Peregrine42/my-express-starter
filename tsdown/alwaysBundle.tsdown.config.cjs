@@ -13,6 +13,7 @@ const alwaysBundle = [
   /buffer-writer/,
   /split2/,
   /oidc-token-manager/,
+  /@mapbox\/node-pre-gyp/,
 ];
 
 module.exports = {

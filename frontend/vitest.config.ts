@@ -6,5 +6,9 @@ export default defineConfig({
     environment: "jsdom",
     include: ["test/suite/**/*.test.ts", "test/suite/**/*.test.tsx"],
     setupFiles: ["./test/setupTests.ts"],
+    coverage: {
+      provider: "v8",
+      include: ["src/pages/**/*.tsx"],
+    },
   },
 });

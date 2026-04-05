@@ -6,5 +6,7 @@ block content
     p(style="color: red")= error
   form(action="/login" method="post")
     label(for="username") Username
-    input#username(type="text" name="username" required)
+    input#username(type="text" name="username" required value=username)
+    label(for="password") Password
+    input#password(type="password" name="password" required)
     input(type="submit" value="Login")

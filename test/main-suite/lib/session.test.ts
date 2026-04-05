@@ -1,6 +1,7 @@
 import Redis from "ioredis";
 import {
   getStringValueFromSession,
+  setStringValueFromSession,
   incrementNumericStringValueFromSession,
   decrementNumericStringValueFromSession,
   hasSession,
@@ -62,6 +63,77 @@ describe("session helpers", () => {
 
       await expect(
         getStringValueFromSession(req, res, "counter"),
+      ).rejects.toThrow("No session!");
+    });
+
+    it("throws when session cookie exists but session is not in Redis", async () => {
+      const req: SessionReq = { cookies: { session: "nonexistent" } };
+      const res: SessionRes = {
+        locals: { allowedSessionObjectKeys },
+      };
+
+      await expect(
+        getStringValueFromSession(req, res, "counter"),
+      ).rejects.toThrow("No session!");
+    });
+  });
+
+  describe("setStringValueFromSession", () => {
+    it("throws when the session key is not allowed", async () => {
+      const req: SessionReq = { cookies: { session: existingSessionId } };
+      const res: SessionRes = {
+        locals: { allowedSessionObjectKeys: ["allowed"] },
+      };
+
+      await expect(
+        setStringValueFromSession(req, res, "disallowed", "value"),
+      ).rejects.toThrow("Invalid session object key! 'disallowed'");
+    });
+
+    it("stores a value for a valid session and returns true", async () => {
+      await setupSession(
+        { cookies: { session: existingSessionId } },
+        { locals: { allowedSessionObjectKeys } },
+        existingSessionId,
+      );
+
+      const req: SessionReq = { cookies: { session: existingSessionId } };
+      const res: SessionRes = {
+        locals: { allowedSessionObjectKeys },
+      };
+
+      const result = await setStringValueFromSession(
+        req,
+        res,
+        "counter",
+        "hello",
+      );
+      expect(result).toEqual(true);
+
+      // Verify the value was stored
+      const value = await getStringValueFromSession(req, res, "counter");
+      expect(value).toEqual("hello");
+    });
+
+    it("throws when there is no session cookie", async () => {
+      const req: SessionReq = {};
+      const res: SessionRes = {
+        locals: { allowedSessionObjectKeys },
+      };
+
+      await expect(
+        setStringValueFromSession(req, res, "counter", "value"),
+      ).rejects.toThrow("No session!");
+    });
+
+    it("throws when session cookie exists but session is not in Redis", async () => {
+      const req: SessionReq = { cookies: { session: "nonexistent" } };
+      const res: SessionRes = {
+        locals: { allowedSessionObjectKeys },
+      };
+
+      await expect(
+        setStringValueFromSession(req, res, "counter", "value"),
       ).rejects.toThrow("No session!");
     });
   });

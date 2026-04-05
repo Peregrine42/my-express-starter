@@ -158,6 +158,24 @@ describe("the counter", () => {
     });
   });
 
+  describe("with a session but no user_id stored", () => {
+    beforeEach(async () => {
+      // Seed a valid session but do NOT write user_id
+      await seedSession(existingSessionId, allowedSessionObjectKeys);
+    });
+
+    it("GET redirects to /login", async () => {
+      const { headers } = await seedSession(
+        existingSessionId,
+        allowedSessionObjectKeys,
+      );
+      const [dispatch] = await setupMyController([SessionCounter, "GET"]);
+      const { response } = await dispatch({ headers });
+      expect(response.statusCode).toEqual(302);
+      expect(response.headers.location).toEqual("/login");
+    });
+  });
+
   describe("with a logged-in session", () => {
     beforeEach(async () => {
       const { headers: _h } = await seedLoggedInSession(

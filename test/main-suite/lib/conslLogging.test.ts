@@ -108,4 +108,14 @@ describe("log", () => {
     // ACT + ASSERT
     expect(consl("log", "foo")).toEqual(["LOG", "foo"]);
   });
+
+  it("logs with a res that has no reqId", () => {
+    // ARRANGE
+    const [consl] = setupConslLogging({
+      consoleOverride: { log: vi.fn() },
+    });
+
+    // ACT + ASSERT — res without reqId should still work
+    expect(consl("log", { locals: {} })).toEqual(["LOG"]);
+  });
 });

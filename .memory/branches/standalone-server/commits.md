@@ -88,3 +88,24 @@ The standalone-server branch has evolved from an initial implementation plan to 
 - Resolved entry format mismatch by wrapping raw `AgentMessage[]` responses from `get_messages` RPC in `{type: "message", message: ...}` format to match frontend's `renderSessionHistory` expectations
 - Added proper message wrapping in both `mirror_sync_request` and `get_messages` handlers to maintain consistency across all data flows between RPC client and frontend
 - Successfully restored full streaming functionality, enabling assistant text to reach browser as expected with no data loss or formatting issues
+
+---
+
+## Commit 116804e7 | 2026-04-05T03:33:45.307Z
+
+### Branch Purpose
+
+Implementing and improving the standalone Tau server that spawns pi as a child process in RPC mode, bridging WebSocket frontend to Pi via JSONL stdin/stdout for process isolation, extension UI support, and mobile-responsive input visibility.
+
+### Previous Progress Summary
+
+The standalone-server branch has evolved from initial implementation to a complete production-ready system with continuous improvements. Early commits established the core architecture with RPC client handling JSONL communication, request/response correlation, and event subscription. Subsequent implementation built out HTTP/HTTP servers with static file serving, session browsing, extension UI bridge, and auto-titling logic. Critical fixes addressed event streaming issues, extension UI response formatting, and message wrapping consistency. The latest work focuses on mobile responsiveness, specifically fixing input visibility issues on mobile devices where the message input box would become hidden during scrolling or keyboard interactions.
+
+### This Commit's Contribution
+
+- Added visualViewport API handling to detect mobile keyboard appearance/disappearance and adjust layout dynamically
+- Applied overflow: hidden to body and html elements to prevent unwanted scrolling on mobile devices
+- Changed header and input area positioning from absolute to fixed on mobile to ensure they remain pinned to the visual viewport
+- Implemented dynamic bottom padding adjustment for the messages container based on visual viewport height and input area visibility
+- Resolved the core issue where mobile users had to scroll to find the input box after scrolling through long message histories
+- Ensured the input area stays consistently visible and accessible regardless of conversation length or keyboard state on mobile devices

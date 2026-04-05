@@ -7,30 +7,34 @@ export class SessionCounter extends BaseController {
   private getUserId = async (
     req: express.Request,
     res: express.Response,
-  ): Promise<number> => {
+  ): Promise<number | null> => {
     const userIdStr = await getStringValueFromSession(req, res, "user_id");
     if (!userIdStr) {
-      return -1;
+      return null;
     }
     return Number(userIdStr);
   };
 
+  /**
+   * Ensure the user has a valid session with a user_id.
+   * Returns the userId on success, or redirects to /login and returns null.
+   */
   private ensureLoggedIn = async (
     req: express.Request,
     res: express.Response,
-  ): Promise<boolean> => {
+  ): Promise<number | null> => {
     if (!req.cookies?.session || !(await hasSession(req, res))) {
       res.redirect("/login");
-      return false;
+      return null;
     }
 
     const userId = await this.getUserId(req, res);
-    if (!userId || userId < 0) {
+    if (!userId) {
       res.redirect("/login");
-      return false;
+      return null;
     }
 
-    return true;
+    return userId;
   };
 
   private getCounter = async (userId: number): Promise<number> => {
@@ -73,41 +77,41 @@ export class SessionCounter extends BaseController {
   };
 
   GET = async (req: express.Request, res: express.Response) => {
-    if (!(await this.ensureLoggedIn(req, res))) {
+    const userId = await this.ensureLoggedIn(req, res);
+    if (!userId) {
       return;
     }
 
-    const userId = await this.getUserId(req, res);
     const value = await this.getCounter(userId);
     res.render("counter", { value });
   };
 
   POST = async (req: express.Request, res: express.Response) => {
-    if (!(await this.ensureLoggedIn(req, res))) {
+    const userId = await this.ensureLoggedIn(req, res);
+    if (!userId) {
       return;
     }
 
-    const userId = await this.getUserId(req, res);
     await this.incrementCounter(userId);
     res.redirect("/counter");
   };
 
   DELETE = async (req: express.Request, res: express.Response) => {
-    if (!(await this.ensureLoggedIn(req, res))) {
+    const userId = await this.ensureLoggedIn(req, res);
+    if (!userId) {
       return;
     }
 
-    const userId = await this.getUserId(req, res);
     await this.decrementCounter(userId);
     res.redirect("/counter");
   };
 
   PUT = async (req: express.Request, res: express.Response) => {
-    if (!(await this.ensureLoggedIn(req, res))) {
+    const userId = await this.ensureLoggedIn(req, res);
+    if (!userId) {
       return;
     }
 
-    const userId = await this.getUserId(req, res);
     await this.resetCounter(userId);
     res.redirect("/counter");
   };
