@@ -1,24 +1,12 @@
-import Redis from "ioredis";
 import { SessionCounter } from "../../src/controllers/SessionCounter";
 import { wasCalledWith } from "./lib/RecordingProxy";
 import { setupMyController } from "../setupMyController";
-import { cleanSessionKeys, seedSession } from "../helpers/session";
+import { cleanSessionKeys, seedLoggedInSession } from "../helpers/session";
 import { getPool } from "../../src/lib/db";
 
 const existingSessionId = "foo";
-const allowedSessionObjectKeys = ["user_id"];
 const testUsername = "counter-test-user";
 let testUserId: number;
-
-/**
- * Seed a session in Redis then immediately delete it,
- * returning headers that carry a now-stale session cookie.
- */
-async function seedStaleSession(sessionId: string, keys: string[]) {
-  const { headers } = await seedSession(sessionId, keys);
-  await cleanSessionKeys(sessionId);
-  return { headers };
-}
 
 /**
  * Seed a test user in Postgres and return their user ID.
@@ -49,20 +37,6 @@ async function seedTestUser(): Promise<number> {
 /**
  * Seed a session in Redis with a user_id and return the headers.
  */
-async function seedLoggedInSession(
-  sessionId: string,
-  userId: number,
-): Promise<{ headers: { cookie: string } }> {
-  const { headers } = await seedSession(sessionId, allowedSessionObjectKeys);
-
-  // Write user_id into the session
-  const redis = new Redis({ keyPrefix: "session:user_id:" });
-  await redis.set(sessionId, String(userId));
-  redis.disconnect();
-
-  return { headers };
-}
-
 describe("the counter", () => {
   beforeAll(async () => {
     testUserId = await seedTestUser();
@@ -82,108 +56,7 @@ describe("the counter", () => {
     await pool.query(`DELETE FROM counters WHERE user_id = $1`, [testUserId]);
   });
 
-  describe("with no session cookie", () => {
-    it("GET redirects to /login", async () => {
-      const [dispatch] = await setupMyController([SessionCounter, "GET"]);
-      const { response } = await dispatch();
-      expect(response.statusCode).toEqual(302);
-      expect(response.headers.location).toEqual("/login");
-    });
-
-    it("POST redirects to /login", async () => {
-      const [dispatch] = await setupMyController([SessionCounter, "POST"]);
-      const { response } = await dispatch({ method: "POST" });
-      expect(response.statusCode).toEqual(302);
-      expect(response.headers.location).toEqual("/login");
-    });
-
-    it("DELETE redirects to /login", async () => {
-      const [dispatch] = await setupMyController([SessionCounter, "DELETE"]);
-      const { response } = await dispatch({ method: "DELETE" });
-      expect(response.statusCode).toEqual(302);
-      expect(response.headers.location).toEqual("/login");
-    });
-
-    it("PUT redirects to /login", async () => {
-      const [dispatch] = await setupMyController([SessionCounter, "PUT"]);
-      const { response } = await dispatch({ method: "PUT" });
-      expect(response.statusCode).toEqual(302);
-      expect(response.headers.location).toEqual("/login");
-    });
-  });
-
-  describe("with a stale session cookie (present in Redis as absent)", () => {
-    it("GET redirects to /login", async () => {
-      const { headers } = await seedStaleSession(
-        existingSessionId,
-        allowedSessionObjectKeys,
-      );
-      const [dispatch] = await setupMyController([SessionCounter, "GET"]);
-      const { response } = await dispatch({ headers });
-      expect(response.statusCode).toEqual(302);
-      expect(response.headers.location).toEqual("/login");
-    });
-
-    it("POST redirects to /login", async () => {
-      const { headers } = await seedStaleSession(
-        existingSessionId,
-        allowedSessionObjectKeys,
-      );
-      const [dispatch] = await setupMyController([SessionCounter, "POST"]);
-      const { response } = await dispatch({ method: "POST", headers });
-      expect(response.statusCode).toEqual(302);
-      expect(response.headers.location).toEqual("/login");
-    });
-
-    it("DELETE redirects to /login", async () => {
-      const { headers } = await seedStaleSession(
-        existingSessionId,
-        allowedSessionObjectKeys,
-      );
-      const [dispatch] = await setupMyController([SessionCounter, "DELETE"]);
-      const { response } = await dispatch({ method: "DELETE", headers });
-      expect(response.statusCode).toEqual(302);
-      expect(response.headers.location).toEqual("/login");
-    });
-
-    it("PUT redirects to /login", async () => {
-      const { headers } = await seedStaleSession(
-        existingSessionId,
-        allowedSessionObjectKeys,
-      );
-      const [dispatch] = await setupMyController([SessionCounter, "PUT"]);
-      const { response } = await dispatch({ method: "PUT", headers });
-      expect(response.statusCode).toEqual(302);
-      expect(response.headers.location).toEqual("/login");
-    });
-  });
-
-  describe("with a session but no user_id stored", () => {
-    beforeEach(async () => {
-      // Seed a valid session but do NOT write user_id
-      await seedSession(existingSessionId, allowedSessionObjectKeys);
-    });
-
-    it("GET redirects to /login", async () => {
-      const { headers } = await seedSession(
-        existingSessionId,
-        allowedSessionObjectKeys,
-      );
-      const [dispatch] = await setupMyController([SessionCounter, "GET"]);
-      const { response } = await dispatch({ headers });
-      expect(response.statusCode).toEqual(302);
-      expect(response.headers.location).toEqual("/login");
-    });
-  });
-
   describe("with a logged-in session", () => {
-    beforeEach(async () => {
-      const { headers: _h } = await seedLoggedInSession(
-        existingSessionId,
-        testUserId,
-      );
-    });
-
     it("renders the counter view at 0", async () => {
       const { headers } = await seedLoggedInSession(
         existingSessionId,

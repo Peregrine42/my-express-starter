@@ -44,6 +44,20 @@ describe("the Login controller", () => {
       expect(response.statusCode).toEqual(200);
       wasCalledWith(res, "render", "login");
     });
+
+    it("reuses existing session if one is valid", async () => {
+      const { headers } = await seedSession(
+        existingSessionId,
+        allowedSessionObjectKeys,
+      );
+      const [dispatch] = await setupMyController([Login, "GET"]);
+      const { res, response } = await dispatch({ headers });
+      expect(response.statusCode).toEqual(200);
+      wasCalledWith(res, "render", "login");
+      // Should NOT have set a new cookie (session already valid)
+      const setCookie = response.headers["set-cookie"];
+      expect(setCookie).toBeUndefined();
+    });
   });
 
   describe("POST", () => {
@@ -51,6 +65,30 @@ describe("the Login controller", () => {
       const [dispatch] = await setupMyController([Login, "POST"]);
       const { response } = await dispatch({
         method: "POST",
+        body: `username=${testUsername}&password=${testPassword}`,
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+      });
+      expect(response.statusCode).toEqual(302);
+      expect(response.headers.location).toEqual("/counter");
+    });
+
+    it("redirects to the specified redirect URL on successful login", async () => {
+      const [dispatch] = await setupMyController([Login, "POST"]);
+      const { response } = await dispatch({
+        method: "POST",
+        path: "/?redirect=%2Fdashboard",
+        body: `username=${testUsername}&password=${testPassword}`,
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+      });
+      expect(response.statusCode).toEqual(302);
+      expect(response.headers.location).toEqual("/dashboard");
+    });
+
+    it("ignores unsafe redirect URL and falls back to /counter", async () => {
+      const [dispatch] = await setupMyController([Login, "POST"]);
+      const { response } = await dispatch({
+        method: "POST",
+        path: "/?redirect=%2F%2Fevil.com",
         body: `username=${testUsername}&password=${testPassword}`,
         headers: { "content-type": "application/x-www-form-urlencoded" },
       });

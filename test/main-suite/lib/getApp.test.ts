@@ -99,6 +99,35 @@ describe("App", () => {
     expect(response.body).toEqual("Internal Server Error");
   });
 
+  it("handles non-500 errors with custom status code", async () => {
+    // ARRANGE
+    const warnFn = vi.fn();
+    const [app] = await getApp({
+      withApp: async (app) => {
+        app.get("/forbidden-route", (_req, _res) => {
+          const err = new Error("Forbidden") as Error & { statusCode: number };
+          err.statusCode = 403;
+          throw err;
+        });
+      },
+      consoleOverride: {
+        ...console,
+        warn: warnFn,
+      } as ConsoleOverride,
+    });
+
+    // ACT
+    const response = await inject(app, {
+      method: "GET",
+      url: "/forbidden-route",
+    });
+
+    // ASSERT
+    expect(response.statusCode).toEqual(403);
+    expect(response.body).toEqual("Forbidden");
+    expect(warnFn).toHaveBeenCalled();
+  });
+
   it("can shutdown cleanly on error", async () => {
     // ACT
     const act = async () => {

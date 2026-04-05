@@ -122,6 +122,28 @@ Allowed keys: ${allowedSessionObjectKeys.join(", ")}
   }
 }
 
+/**
+ * Destroy all Redis keys for a given session ID.
+ * Deletes the session existence key plus all per-field keys.
+ */
+export async function destroySession(sessionId: string): Promise<void> {
+  const keyPrefixes = ["session::"];
+  const redis = new Redis({ keyPrefix: keyPrefixes[0] });
+  try {
+    // Get all keys matching session:*:<sessionId> using SCAN
+    const stream = redis.scanStream({ match: `*${sessionId}`, count: 100 });
+    const pipeline = redis.pipeline();
+    for await (const keys of stream) {
+      for (const key of keys) {
+        pipeline.del(key);
+      }
+    }
+    await pipeline.exec();
+  } finally {
+    redis.disconnect();
+  }
+}
+
 export type SessionOpts = {
   allowedSessionObjectKeys: string[];
 };

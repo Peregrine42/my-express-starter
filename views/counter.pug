@@ -1,14 +1,19 @@
 extends ./layout
+
 block content
   form(action="/logout" method="post" style="float: right")
+    +csrfField
     input(type="submit" value="Logout")
   span(data-testid="counter-value")
     = value
   form(action="/counter" method="post")
+    +csrfField
     input(type="submit" value="+")
   form(action="/counter" method="post")
+    +csrfField
     input(type="hidden" name="_method" value="delete")
     input(type="submit" value="−")
   form(action="/counter" method="post")
+    +csrfField
     input(type="hidden" name="_method" value="put")
     input(type="submit" value="Reset")

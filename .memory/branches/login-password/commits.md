@@ -32,7 +32,30 @@ Initial commit. Implemented complete password authentication system including bc
 ### Merge from refactor-clarity
 
 Refactored SessionCounter and Login controllers for clarity:
+
 - SessionCounter.ensureLoggedIn now returns userId | null (was boolean), eliminating duplicate getUserId calls and replacing magic -1 with null
-- Login.authenticateUser extracted from POST handler for single responsibility  
+- Login.authenticateUser extracted from POST handler for single responsibility
 - test/helpers/user.ts created with cleanTestUser helper, used in login tests
-All 95 tests pass with 100% coverage.
+  All 95 tests pass with 100% coverage.
+
+---
+
+## Commit 8de49baa | 2026-04-05T10:54:14.813Z
+
+### Branch Purpose
+
+Implement global authentication middleware that protects all routes by default with exempt public paths, eliminating per-controller auth checks and establishing a centralized security model.
+
+### Previous Progress Summary
+
+Initial commit implemented complete password authentication system with bcrypt hashing, database migration for password_hash column, updated Login controller with password validation and user registration, and comprehensive test coverage. Subsequent merge from refactor-clarity branch improved architecture by extracting Login.authenticateUser method, refactoring SessionCounter.ensureLoggedIn to return userId | null instead of boolean (eliminating duplicate getUserId calls), creating test/helpers/user.ts with cleanTestUser helper, and replacing magic -1 return values with null for better code clarity. All work maintains 100% test coverage across 95 backend tests.
+
+### This Commit's Contribution
+
+- Decided on global auth middleware approach over per-controller checks to ensure consistent security and eliminate redundant authentication logic across controllers
+- Implemented PUBLIC_PATHS array to define route exemptions (GET /login, POST /login) while protecting all other routes by default
+- Mounted auth middleware at router level in getRouter.ts to automatically protect all current and future routes without manual controller updates
+- Refactored Home controller to redirect logged-in users to /counter since the home page is now behind authentication
+- Removed per-controller auth checks from SessionCounter, simplifying the controller and delegating security to the global middleware
+- Created comprehensive auth.test.ts testing the middleware behavior for public vs protected routes, session validation, and user_id checking
+- Updated all affected unit tests (home.test.ts, counter.test.ts) to work with the new auth model, removing redundant redirect tests that are now handled by middleware

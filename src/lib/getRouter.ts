@@ -1,5 +1,12 @@
 import { Router } from "express";
 import { BaseController } from "./Controller";
+import { requireAuth } from "./auth";
+import {
+  csrfPreload,
+  csrfSynchronisedProtection,
+  csrfHelper,
+  csrfPersist,
+} from "./csrf";
 import _ from "lodash";
 
 export type Method = "GET" | "POST" | "DELETE" | "PUT";
@@ -56,6 +63,16 @@ export function configureAndAttachRoutes(
 
 export async function getRouter(routes: RoutesConfig) {
   const myRouter = Router();
+
+  // CSRF: preload token from Redis, validate on mutating methods, attach helper, persist after response
+  myRouter.use(csrfPreload());
+  myRouter.use(csrfSynchronisedProtection);
+  myRouter.use(csrfHelper());
+  myRouter.use(csrfPersist());
+
+  // Auth: require login for all non-public routes
+  myRouter.use(requireAuth());
+
   configureAndAttachRoutes(myRouter, routes);
 
   return myRouter;

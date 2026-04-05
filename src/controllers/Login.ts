@@ -5,13 +5,25 @@ import {
   hasSession,
   setupSession,
   setStringValueFromSession,
+  destroySession,
 } from "../lib/session";
+import { isSafeRedirect } from "../lib/auth";
 import { getPool } from "../lib/db";
 import { hashPassword, verifyPassword } from "../lib/password";
 
 export class Login extends BaseController {
-  GET = async (_req: express.Request, res: express.Response) => {
-    res.render("login");
+  GET = async (req: express.Request, res: express.Response) => {
+    // Ensure a session exists so we can bind a CSRF token to it
+    if (!req.cookies?.session || !(await hasSession(req, res))) {
+      const sessionId = generateSessionId();
+      await setupSession(req, res, sessionId);
+      res.cookie("session", sessionId, { path: "/" });
+      req.cookies.session = sessionId;
+    }
+
+    res.render("login", {
+      redirectTo: (req.query.redirect as string | undefined) || null,
+    });
   };
 
   POST = async (req: express.Request, res: express.Response) => {
@@ -20,12 +32,20 @@ export class Login extends BaseController {
     const password = req.body?.password as string | undefined;
 
     if (!username) {
-      res.render("login", { error: "Username is required.", username });
+      res.render("login", {
+        error: "Username is required.",
+        username,
+        redirectTo: (req.query.redirect as string | undefined) || null,
+      });
       return;
     }
 
     if (!password) {
-      res.render("login", { error: "Password is required.", username });
+      res.render("login", {
+        error: "Password is required.",
+        username,
+        redirectTo: (req.query.redirect as string | undefined) || null,
+      });
       return;
     }
 
@@ -34,11 +54,17 @@ export class Login extends BaseController {
       res.render("login", {
         error: "Invalid username or password.",
         username,
+        redirectTo: (req.query.redirect as string | undefined) || null,
       });
       return;
     }
 
-    await this.createSessionAndRedirect(req, res, result.userId);
+    // Determine where to redirect after login
+    const rawRedirect = req.query.redirect as string | undefined;
+    const redirectTo =
+      rawRedirect && isSafeRedirect(rawRedirect) ? rawRedirect : "/counter";
+
+    await this.createSessionAndRedirect(req, res, result.userId, redirectTo);
   };
 
   /**
@@ -74,19 +100,30 @@ export class Login extends BaseController {
     return { userId: result.rows[0].id };
   }
 
+  /**
+   * Create a fresh session (session fixation protection) and redirect.
+   * Always destroys the old session and creates a new one.
+   */
   private async createSessionAndRedirect(
     req: express.Request,
     res: express.Response,
     userId: number,
+    redirectTo: string,
   ) {
-    const sessionId = req.cookies?.session || generateSessionId();
-    if (!(await hasSession(req, res))) {
-      await setupSession(req, res, sessionId);
-      res.cookie("session", sessionId, { path: "/" });
-      req.cookies.session = sessionId;
+    // Destroy old session to prevent session fixation
+    const oldSessionId = req.cookies?.session;
+    if (oldSessionId) {
+      await destroySession(oldSessionId);
     }
+
+    // Always create a brand-new session
+    const sessionId = generateSessionId();
+    await setupSession(req, res, sessionId);
+    res.cookie("session", sessionId, { path: "/" });
+    req.cookies.session = sessionId;
+
     await setStringValueFromSession(req, res, "user_id", String(userId));
 
-    res.redirect("/counter");
+    res.redirect(redirectTo);
   }
 }

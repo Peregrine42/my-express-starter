@@ -4,7 +4,9 @@ block content
   h1 Login
   if error
     p(style="color: red")= error
-  form(action="/login" method="post")
+  - var action = "/login" + (redirectTo ? "?redirect=" + encodeURIComponent(redirectTo) : "")
+  form(action=action method="post")
+    +csrfField
     label(for="username") Username
     input#username(type="text" name="username" required value=username)
     label(for="password") Password

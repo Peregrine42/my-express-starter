@@ -41,14 +41,17 @@ describe("attachAppMiddleware", () => {
     const app = express();
     await attachAppMiddleware(app, { withRouter: true });
 
-    // The router should be attached, so unhandled routes get a 404
-    // via the BaseController FALLBACK (which sends empty 404)
+    // The router (with auth middleware) should be attached,
+    // so non-public routes redirect to /login
     const response = await inject(app, {
       method: "get",
       url: "/nonexistent-route",
     });
 
-    expect(response.statusCode).toEqual(404);
+    expect(response.statusCode).toEqual(302);
+    expect(response.headers.location).toEqual(
+      "/login?redirect=%2Fnonexistent-route",
+    );
   });
 
   it("registers routes when options are not provided (default withRouter)", async () => {
@@ -60,6 +63,9 @@ describe("attachAppMiddleware", () => {
       url: "/nonexistent-route",
     });
 
-    expect(response.statusCode).toEqual(404);
+    expect(response.statusCode).toEqual(302);
+    expect(response.headers.location).toEqual(
+      "/login?redirect=%2Fnonexistent-route",
+    );
   });
 });
