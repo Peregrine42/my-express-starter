@@ -7,7 +7,6 @@ import Redis from "ioredis";
 import inject from "light-my-request";
 
 const existingSessionId = "csrf-test-session";
-const allowedSessionObjectKeys = ["user_id"];
 const testUsername = "csrf-test-user";
 let testUserId: number;
 
@@ -47,8 +46,7 @@ describe("CSRF middleware", () => {
   });
 
   afterAll(async () => {
-    const pool = getPool();
-    await pool.query(`DELETE FROM users WHERE id = $1`, [testUserId]);
+    await cleanTestUser(testUserId);
   });
 
   beforeEach(async () => {
@@ -66,7 +64,6 @@ describe("CSRF middleware", () => {
     const response = await inject(app, {
       method: "POST",
       url: "/counter",
-      headers,
       body: "value=1",
       headers: {
         ...headers,

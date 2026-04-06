@@ -1,9 +1,12 @@
 extends ./layout
 
+block stylesheets
+  link(rel="stylesheet" href="/public/pages/login.css")
+
 block content
   h1 Login
   if error
-    p(style="color: red")= error
+    p.login-error= error
   - var action = "/login" + (redirectTo ? "?redirect=" + encodeURIComponent(redirectTo) : "")
   form(action=action method="post")
     +csrfField

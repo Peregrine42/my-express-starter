@@ -133,17 +133,15 @@ describe("requireAuth middleware", () => {
     });
 
     it("redirects to /login when Redis throws while reading user_id", async () => {
-      const { default: session } = await import("../../src/lib/session");
+      const session = await import("../../src/lib/session");
       const { headers } = await seedSession(
         existingSessionId,
         allowedSessionObjectKeys,
       );
 
-      // Temporarily make getStringValueFromSession throw
-      const original = session.getStringValueFromSession;
-      session.getStringValueFromSession = () => {
-        return Promise.reject(new Error("Redis down"));
-      };
+      const spy = vi
+        .spyOn(session, "getStringValueFromSession")
+        .mockRejectedValue(new Error("Redis down"));
 
       try {
         const { response } = await dispatchWithRouter("GET", "/counter", {
@@ -152,7 +150,7 @@ describe("requireAuth middleware", () => {
         expect(response.statusCode).toEqual(302);
         expect(response.headers.location).toEqual("/login?redirect=%2Fcounter");
       } finally {
-        session.getStringValueFromSession = original;
+        spy.mockRestore();
       }
     });
   });

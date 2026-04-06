@@ -1,7 +1,10 @@
 extends ./layout
 
+block stylesheets
+  link(rel="stylesheet" href="/public/pages/counter.css")
+
 block content
-  form(action="/logout" method="post" style="float: right")
+  form.logout-form(action="/logout" method="post")
     +csrfField
     input(type="submit" value="Logout")
   span(data-testid="counter-value")

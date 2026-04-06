@@ -2,6 +2,7 @@ import type { TestProject } from "vitest/node";
 import Redis from "ioredis";
 import { chromium, type BrowserServer } from "playwright";
 import { getApp, type ShutdownApp } from "../../src/lib/getApp";
+import { closePool } from "../../src/lib/db";
 import { attachAppMiddleware } from "../../src/lib/attachMiddleware";
 import { getPool } from "../../src/lib/db";
 
@@ -103,6 +104,8 @@ export default function setup(project: TestProject) {
           userResult.rows[0].id,
         ]);
       }
+
+      await closePool();
     };
   });
 }
