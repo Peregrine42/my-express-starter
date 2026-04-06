@@ -4,6 +4,17 @@ import { getRouter } from "./getRouter";
 import { getMyRoutes } from "../getMyRoutes";
 import { sessionSetupMiddleware, hasSession } from "./session";
 
+export async function checkLogin(
+  req: express.Request,
+  res: express.Response,
+): Promise<boolean> {
+  try {
+    return await hasSession(req, res);
+  } catch {
+    return false;
+  }
+}
+
 export async function attachAppMiddleware(
   app: express.Application,
   options?: { withRouter?: boolean },
@@ -14,10 +25,8 @@ export async function attachAppMiddleware(
     "/",
     sessionSetupMiddleware({ allowedSessionObjectKeys: ["user_id"] }),
   );
-  app.use(async (req, res, next) => {
-    res.locals.isLoggedIn = await hasSession(req, res).catch(() => {
-      return false;
-    });
+  app.use(async (req: express.Request, res: express.Response, next) => {
+    res.locals.isLoggedIn = await checkLogin(req, res);
     next();
   });
   app.use(express.urlencoded({ extended: false }));

@@ -1,5 +1,6 @@
 import express from "express";
 import inject from "light-my-request";
+import { describe, it, expect } from "vitest";
 import { attachAppMiddleware } from "../../../src/lib/attachMiddleware";
 
 describe("attachAppMiddleware", () => {
@@ -22,6 +23,25 @@ describe("attachAppMiddleware", () => {
     expect(response.statusCode).toEqual(200);
     // The sessionSetupMiddleware should set allowedSessionObjectKeys
     expect(localsKeys).toContain("allowedSessionObjectKeys");
+  });
+
+  it("sets isLoggedIn to false when no session cookie exists", async () => {
+    const app = express();
+    await attachAppMiddleware(app, { withRouter: false });
+
+    let isLoggedIn: boolean | undefined;
+    app.get("/test", (_req, res) => {
+      isLoggedIn = res.locals.isLoggedIn;
+      res.send("ok");
+    });
+
+    const response = await inject(app, {
+      method: "get",
+      url: "/test",
+    });
+
+    expect(response.statusCode).toEqual(200);
+    expect(isLoggedIn).toBe(false);
   });
 
   it("does not register routes when withRouter is false", async () => {
