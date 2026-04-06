@@ -36,6 +36,7 @@
     "concurrently": "9.2.1",
     "eslint": "10.2.0",
     "globals": "17.4.0",
+    "husky": "9.1.7",
     "jsdom": "29.0.1",
     "light-my-request": "6.6.0",
     "nodemon": "3.1.14",
@@ -86,6 +87,7 @@
     "test": "npm run backend:test && npm run frontend:test && npm run test:e2e",
     "test:watch": "concurrently npm:backend:test:watch npm:frontend:test:watch",
     "test:e2e": "node --env-file=.env ./node_modules/vitest/vitest.mjs run --config vitest.config.e2e.ts",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "prepare": "husky"
   }
 }
