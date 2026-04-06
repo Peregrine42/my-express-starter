@@ -10,7 +10,7 @@ import {
 } from "../lib/session";
 import { isSafeRedirect } from "../lib/auth";
 import { getPool } from "../lib/db";
-import { hashPassword, verifyPassword } from "../lib/password";
+import { verifyPassword } from "../lib/password";
 
 export class Login extends BaseController {
   GET = async (req: express.Request, res: express.Response) => {
@@ -76,7 +76,7 @@ export class Login extends BaseController {
   };
 
   /**
-   * Authenticate an existing user or register a new one.
+   * Authenticate an existing user against the database.
    * Returns the userId on success, or null if authentication fails.
    */
   private async authenticateUser(
@@ -90,22 +90,15 @@ export class Login extends BaseController {
       [username],
     );
 
-    if (existing.rows.length > 0) {
-      const { id: userId, password_hash } = existing.rows[0];
-      if (!(await verifyPassword(password, password_hash))) {
-        return null;
-      }
-      return { userId };
+    if (existing.rows.length === 0) {
+      return null;
     }
 
-    // New user — register with hashed password
-    const passwordHash = await hashPassword(password);
-    const result = await pool.query(
-      `INSERT INTO users (username, password_hash) VALUES ($1, $2)
-       RETURNING id`,
-      [username, passwordHash],
-    );
-    return { userId: result.rows[0].id };
+    const { id: userId, password_hash } = existing.rows[0];
+    if (!(await verifyPassword(password, password_hash))) {
+      return null;
+    }
+    return { userId };
   }
 
   /**

@@ -3,6 +3,7 @@ import { attachAppMiddleware } from "./lib/attachMiddleware";
 import { envVarNames } from "./env";
 import { validateEnv } from "./lib/env";
 import { createMigrator } from "./migrations/runner";
+import { ensureInitialUser } from "./lib/initialUser";
 
 declare global {
   namespace Express {
@@ -23,6 +24,8 @@ declare global {
       if (pending.length > 0) {
         await migrator.up();
       }
+
+      await ensureInitialUser();
     },
     withApp: (app) => {
       return attachAppMiddleware(app);

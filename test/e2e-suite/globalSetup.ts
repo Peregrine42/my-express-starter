@@ -5,9 +5,9 @@ import { getApp, type ShutdownApp } from "../../src/lib/getApp";
 import { closePool } from "../../src/lib/db";
 import { attachAppMiddleware } from "../../src/lib/attachMiddleware";
 import { getPool } from "../../src/lib/db";
+import { ensureInitialUser } from "../../src/lib/initialUser";
 
 const E2E_SESSION_ID = "e2e-test-session";
-const E2E_USERNAME = "e2e-test-user";
 
 export default function setup(project: TestProject) {
   let appShutdown: ShutdownApp;
@@ -23,21 +23,14 @@ export default function setup(project: TestProject) {
   async function startServerAndBrowser(project: TestProject) {
     const pool = getPool();
 
-    // Seed a user in Postgres for E2E tests
+    // Ensure the initial user exists (as the app would on startup)
+    await ensureInitialUser();
+
     const userResult = await pool.query(
-      `INSERT INTO users (username) VALUES ($1)
-       ON CONFLICT (username) DO NOTHING
-       RETURNING id`,
-      [E2E_USERNAME],
+      `SELECT id FROM users WHERE username = $1`,
+      [process.env.INITIAL_USER_USERNAME!],
     );
-    const userId =
-      userResult.rows.length > 0
-        ? userResult.rows[0].id
-        : (
-            await pool.query(`SELECT id FROM users WHERE username = $1`, [
-              E2E_USERNAME,
-            ])
-          ).rows[0].id;
+    const userId = userResult.rows[0].id;
 
     // Clean any stale counter for this user
     await pool.query(`DELETE FROM counters WHERE user_id = $1`, [userId]);
@@ -76,7 +69,7 @@ export default function setup(project: TestProject) {
       await appShutdown();
       await browserServer.close();
 
-      // Clean up the seeded session and counter
+      // Clean up the seeded session
       const teardownSessionRedis = new Redis({ keyPrefix: "session::" });
       try {
         await teardownSessionRedis.del(E2E_SESSION_ID);
@@ -90,17 +83,14 @@ export default function setup(project: TestProject) {
         teardownUserIdRedis.disconnect();
       }
 
-      // Clean up the E2E user and counter from Postgres
+      // Clean up the counter (but not the user — it's the initial user)
       const pool = getPool();
       const userResult = await pool.query(
         `SELECT id FROM users WHERE username = $1`,
-        [E2E_USERNAME],
+        [process.env.INITIAL_USER_USERNAME!],
       );
       if (userResult.rows.length > 0) {
         await pool.query(`DELETE FROM counters WHERE user_id = $1`, [
-          userResult.rows[0].id,
-        ]);
-        await pool.query(`DELETE FROM users WHERE id = $1`, [
           userResult.rows[0].id,
         ]);
       }

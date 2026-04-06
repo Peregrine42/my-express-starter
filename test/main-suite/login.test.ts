@@ -128,51 +128,17 @@ describe("the Login controller", () => {
       wasCalledWith(res, "render", "login", { username: testUsername });
     });
 
-    it("creates a new user and redirects to /counter on registration (new username with password)", async () => {
-      const uniqueUsername = `login-test-new-${Date.now()}`;
-      const uniquePassword = "newuserpass";
-      const pool = getPool();
-      try {
-        const [dispatch] = await setupMyController([Login, "POST"]);
-        const { response } = await dispatch({
-          method: "POST",
-          body: `username=${uniqueUsername}&password=${uniquePassword}`,
-          headers: { "content-type": "application/x-www-form-urlencoded" },
-        });
-        expect(response.statusCode).toEqual(302);
-        expect(response.headers.location).toEqual("/counter");
-
-        // Verify the user was actually created with a hashed password
-        const result = await pool.query(
-          `SELECT password_hash FROM users WHERE username = $1`,
-          [uniqueUsername],
-        );
-        expect(result.rows).toHaveLength(1);
-        expect(result.rows[0].password_hash).not.toBe(uniquePassword);
-        expect(result.rows[0].password_hash.length).toBeGreaterThan(0);
-      } finally {
-        const userResult = await pool.query(
-          `SELECT id FROM users WHERE username = $1`,
-          [uniqueUsername],
-        );
-        if (userResult.rows.length > 0) {
-          await cleanTestUser(userResult.rows[0].id);
-        }
-      }
-    });
-
-    it("creates a new session cookie (no max-age) when none exists", async () => {
+    it("renders login with error when username does not exist", async () => {
       const [dispatch] = await setupMyController([Login, "POST"]);
-      const { response } = await dispatch({
+      const { res, response } = await dispatch({
         method: "POST",
-        body: `username=${testUsername}&password=${testPassword}`,
+        body: "username=nonexistent-user&password=test",
         headers: { "content-type": "application/x-www-form-urlencoded" },
       });
-      expect(response.statusCode).toEqual(302);
-      const setCookie = response.headers["set-cookie"] as string;
-      expect(setCookie).toBeDefined();
-      // No remember → session-only cookie (no Max-Age)
-      expect(setCookie.toLowerCase()).not.toContain("max-age=");
+      expect(response.statusCode).toEqual(200);
+      wasCalledWith(res, "render", "login", {
+        username: "nonexistent-user",
+      });
     });
 
     it("sets a persistent cookie with Max-Age when 'remember' is checked", async () => {

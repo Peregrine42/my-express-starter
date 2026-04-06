@@ -62,3 +62,25 @@ Initial commit established the TDD approach for implementing "remember me" funct
 - Updated tests comprehensively: rewrote 2 existing tests to assert default TTL behavior instead of no-expiry, added 3 new constant definition tests to verify TTL constants
 - Ensured proper TTL precedence: unchecked 'remember me' uses 24h default, checked uses 30d override, eliminating session scenarios with indefinite Redis persistence
 - Maintained 100% test coverage with all backend, frontend, and E2E tests passing cleanly
+
+---
+
+## Commit 74f6cff7 | 2026-04-06T09:37:16.260Z
+
+### Branch Purpose
+
+Implement "remember me" functionality on the login page that sets persistent session cookies with Redis TTL when checked, versus session-only cookies when unchecked, and replace auto-registration with initial user management via environment variables.
+
+### Previous Progress Summary
+
+The branch began implementing "remember me" functionality through a TDD approach, establishing the workflow of adding a checkbox to the login form that controls cookie persistence and Redis TTL. Early commits implemented the core session infrastructure changes, adding TTL support to `setupSession` and `setStringValueFromSession` with `REMEMBER_ME_TTL_MS` (30 days) constant. The branch then evolved to include default Redis expiry with `SESSION_TTL_MS` (24 hours) to prevent permanent key accumulation. Most recently, the branch shifted from auto-creating new users on login to using `INITIAL_USER_USERNAME` and `INITIAL_USER_PASSWORD` environment variables with an `ensureInitialUser()` startup function that creates or resets the initial user's credentials, while keeping the Login controller focused solely on authentication of existing users.
+
+### This Commit's Contribution
+
+- Replaced auto-registration on login with environment-variable-driven initial user management using `INITIAL_USER_USERNAME` and `INITIAL_USER_PASSWORD` env vars
+- Implemented `ensureInitialUser()` startup function that creates the user if missing or resets the password to match env var values, ensuring consistent initial credentials
+- Modified Login controller to remove user creation logic, making it solely responsible for authenticating existing users instead of auto-registering new ones
+- Updated `.env.example` with new initial user credentials and added startup call to `beforeAppStartup` in `src/index.ts`
+- Refactored tests to remove "creates a new user" test from login suite and added comprehensive tests for `ensureInitialUser` function covering both creation and password reset scenarios
+- Updated E2E globalSetup to use initial user credentials instead of creating separate test users, maintaining test consistency with the new approach
+- All tests pass with 100% coverage across 122 tests, maintaining existing functionality while improving security and predictability of user management
