@@ -8,6 +8,7 @@ declare global {
   namespace Express {
     interface Locals {
       allowedSessionObjectKeys: string[];
+      isLoggedIn: boolean;
     }
   }
 }

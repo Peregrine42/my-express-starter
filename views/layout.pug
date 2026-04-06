@@ -10,4 +10,8 @@ html(lang="en")
 
   body
     include mixins/csrf
+    if isLoggedIn
+      form.logout-form(action="/logout" method="post")
+        +csrfField
+        input(type="submit" value="Logout")
     block content

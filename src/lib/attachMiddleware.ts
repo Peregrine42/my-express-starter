@@ -2,7 +2,7 @@ import express from "express";
 import methodOverride from "method-override";
 import { getRouter } from "./getRouter";
 import { getMyRoutes } from "../getMyRoutes";
-import { sessionSetupMiddleware } from "./session";
+import { sessionSetupMiddleware, hasSession } from "./session";
 
 export async function attachAppMiddleware(
   app: express.Application,
@@ -14,6 +14,12 @@ export async function attachAppMiddleware(
     "/",
     sessionSetupMiddleware({ allowedSessionObjectKeys: ["user_id"] }),
   );
+  app.use(async (req, res, next) => {
+    res.locals.isLoggedIn = await hasSession(req, res).catch(() => {
+      return false;
+    });
+    next();
+  });
   app.use(express.urlencoded({ extended: false }));
   app.use(
     methodOverride((req) => {

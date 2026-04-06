@@ -4,9 +4,6 @@ block stylesheets
   link(rel="stylesheet" href="/public/pages/counter.css")
 
 block content
-  form.logout-form(action="/logout" method="post")
-    +csrfField
-    input(type="submit" value="Logout")
   span(data-testid="counter-value")
     = value
   form(action="/counter" method="post")
