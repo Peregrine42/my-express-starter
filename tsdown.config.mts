@@ -15,6 +15,7 @@ export default defineConfig({
     alwaysBundle,
     onlyBundle: false,
   },
+  sourcemap: true,
   checks: {
     legacyCjs: false,
     pluginTimings: false,

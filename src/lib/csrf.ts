@@ -9,7 +9,9 @@ const { csrfSynchronisedProtection } = csrfSync({
     return req._csrfSyncToken;
   },
   storeTokenInState: (req, token) => {
-    req._csrfSyncToken = token ?? undefined;
+    // token can be string | null | undefined per CsrfSyncedToken type;
+    // both null and undefined are falsy, so no need for ?? undefined
+    req._csrfSyncToken = token as string | undefined;
   },
   getTokenFromRequest: (req) => {
     // Form submissions use _csrf hidden field

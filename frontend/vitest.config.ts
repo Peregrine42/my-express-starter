@@ -9,6 +9,9 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/pages/**/*.tsx"],
+      thresholds: {
+        100: true,
+      },
     },
   },
 });

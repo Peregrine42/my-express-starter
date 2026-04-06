@@ -31,19 +31,14 @@ export function requireAuth(): express.Handler {
 
     // Check for a valid session
     if (!req.cookies?.session || !(await hasSession(req, res))) {
-      const redirect = encodeURIComponent(req.originalUrl || "/");
+      const redirect = encodeURIComponent(req.originalUrl ?? "/");
       return res.redirect(`/login?redirect=${redirect}`);
     }
 
     // Check for user_id in the session
-    try {
-      const userId = await getStringValueFromSession(req, res, "user_id");
-      if (!userId) {
-        const redirect = encodeURIComponent(req.originalUrl || "/");
-        return res.redirect(`/login?redirect=${redirect}`);
-      }
-    } catch {
-      const redirect = encodeURIComponent(req.originalUrl || "/");
+    const userId = await getStringValueFromSession(req, res, "user_id");
+    if (!userId) {
+      const redirect = encodeURIComponent(req.originalUrl ?? "/");
       return res.redirect(`/login?redirect=${redirect}`);
     }
 

@@ -103,17 +103,19 @@ export default function (pi: ExtensionAPI) {
       ctx.ui.notify(`Format/lint error on ${filePath}: ${e.message}`, "error");
     }
 
-    if (eslintOutput) {
-      ctx.ui.notify(`ESLint: ${filePath}`, "error");
-      return {
-        content: [
-          ...event.content,
-          {
-            type: "text" as const,
-            text: `\n⚠ ESLint reported issues in ${filePath}:\n${eslintOutput}`,
-          },
-        ],
-      };
+    if (!eslintOutput) {
+      return;
     }
+
+    ctx.ui.notify(`ESLint: ${filePath}`, "error");
+    return {
+      content: [
+        ...event.content,
+        {
+          type: "text" as const,
+          text: `\n⚠ ESLint reported issues in ${filePath}:\n${eslintOutput}`,
+        },
+      ],
+    };
   });
 }

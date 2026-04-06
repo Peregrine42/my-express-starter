@@ -9,6 +9,9 @@ export default defineConfig({
       provider: "v8",
       include: ["src/**/*.ts"],
       exclude: ["src/migrations/**", "src/index.ts", "src/lib/types.ts"],
+      thresholds: {
+        100: true,
+      },
     },
   },
 });

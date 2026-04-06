@@ -97,6 +97,40 @@ describe("requireAuth middleware", () => {
     });
   });
 
+  describe("direct unit tests", () => {
+    it("redirects to /login?redirect=%2F when originalUrl is undefined", async () => {
+      const { requireAuth } = await import("../../src/lib/auth");
+      const handler = requireAuth();
+      const req = { path: "/counter", cookies: {} } as any;
+      const res = { redirect: vi.fn() } as any;
+      const next = vi.fn();
+      await handler(req, res, next);
+      expect(res.redirect).toHaveBeenCalledWith("/login?redirect=%2F");
+    });
+
+    it("redirects to /login?redirect=%2F when session exists but user_id is falsy and originalUrl is undefined", async () => {
+      const { requireAuth } = await import("../../src/lib/auth");
+      const handler = requireAuth();
+      const { headers } = await seedSession(
+        existingSessionId,
+        allowedSessionObjectKeys,
+      );
+      const cookie = headers.cookie;
+      const sessionId = cookie.split("=")[1];
+      const req = {
+        path: "/counter",
+        cookies: { session: sessionId },
+      } as any;
+      const res = {
+        redirect: vi.fn(),
+        locals: { allowedSessionObjectKeys },
+      } as any;
+      const next = vi.fn();
+      await handler(req, res, next);
+      expect(res.redirect).toHaveBeenCalledWith("/login?redirect=%2F");
+    });
+  });
+
   describe("protected paths", () => {
     it("redirects to /login?redirect= when no session cookie is present", async () => {
       const { response } = await dispatchWithRouter("GET", "/counter");
@@ -141,28 +175,6 @@ describe("requireAuth middleware", () => {
       const { response } = await dispatchWithRouter("GET", "/");
       expect(response.statusCode).toEqual(302);
       expect(response.headers.location).toEqual("/login?redirect=%2F");
-    });
-
-    it("redirects to /login when Redis throws while reading user_id", async () => {
-      const session = await import("../../src/lib/session");
-      const { headers } = await seedSession(
-        existingSessionId,
-        allowedSessionObjectKeys,
-      );
-
-      const spy = vi
-        .spyOn(session, "getStringValueFromSession")
-        .mockRejectedValue(new Error("Redis down"));
-
-      try {
-        const { response } = await dispatchWithRouter("GET", "/counter", {
-          headers,
-        });
-        expect(response.statusCode).toEqual(302);
-        expect(response.headers.location).toEqual("/login?redirect=%2Fcounter");
-      } finally {
-        spy.mockRestore();
-      }
     });
   });
 });
