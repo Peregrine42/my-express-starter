@@ -3,6 +3,7 @@ import { attachAppMiddleware } from "../../src/lib/attachMiddleware";
 import { seedLoggedInSession, cleanSessionKeys } from "../helpers/session";
 import { cleanTestUser } from "../helpers/user";
 import { getPool } from "../../src/lib/db";
+import { suppressExpectedErrors } from "../helpers/suppressExpectedErrors";
 import Redis from "ioredis";
 import inject from "light-my-request";
 
@@ -41,6 +42,16 @@ async function seedCsrfToken(sessionId: string): Promise<string> {
 }
 
 describe("CSRF middleware", () => {
+  let restoreConsole: () => void;
+
+  beforeEach(() => {
+    restoreConsole = suppressExpectedErrors(["invalid csrf token"]);
+  });
+
+  afterEach(() => {
+    restoreConsole();
+  });
+
   beforeAll(async () => {
     testUserId = await seedTestUser();
   });

@@ -6,6 +6,7 @@ import {
   seedLoggedInSession,
 } from "../helpers/session";
 import { getPool } from "../../src/lib/db";
+import { suppressExpectedErrors } from "../helpers/suppressExpectedErrors";
 import inject, { type Response as InjectResponse } from "light-my-request";
 
 const existingSessionId = "auth-test-session";
@@ -61,6 +62,16 @@ async function dispatchWithRouter(
 }
 
 describe("requireAuth middleware", () => {
+  let restoreConsole: () => void;
+
+  beforeEach(() => {
+    restoreConsole = suppressExpectedErrors(["invalid csrf token"]);
+  });
+
+  afterEach(() => {
+    restoreConsole();
+  });
+
   beforeAll(async () => {
     testUserId = await seedTestUser();
   });
