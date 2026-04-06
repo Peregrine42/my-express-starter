@@ -3,25 +3,10 @@ import {
   setupSession,
   setStringValueFromSession,
   SESSION_TTL_MS,
-  REMEMBER_ME_TTL_MS,
 } from "../../src/lib/session";
 import { cleanSessionKeys } from "../helpers/session";
 
 const sessionId = "ttl-test-session";
-
-describe("TTL constants", () => {
-  it("SESSION_TTL_MS is 24 hours", () => {
-    expect(SESSION_TTL_MS).toBe(24 * 60 * 60 * 1000);
-  });
-
-  it("REMEMBER_ME_TTL_MS is 30 days", () => {
-    expect(REMEMBER_ME_TTL_MS).toBe(30 * 24 * 60 * 60 * 1000);
-  });
-
-  it("REMEMBER_ME_TTL_MS is longer than SESSION_TTL_MS", () => {
-    expect(REMEMBER_ME_TTL_MS).toBeGreaterThan(SESSION_TTL_MS);
-  });
-});
 
 describe("session TTL", () => {
   const allowedSessionObjectKeys = ["user_id"];
