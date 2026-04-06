@@ -161,16 +161,31 @@ describe("the Login controller", () => {
       }
     });
 
-    it("creates a new session cookie when none exists", async () => {
+    it("creates a new session cookie (no max-age) when none exists", async () => {
       const [dispatch] = await setupMyController([Login, "POST"]);
       const { response } = await dispatch({
         method: "POST",
         body: `username=${testUsername}&password=${testPassword}`,
         headers: { "content-type": "application/x-www-form-urlencoded" },
       });
-      // A set-cookie header should be present for the session
-      const setCookie = response.headers["set-cookie"];
+      expect(response.statusCode).toEqual(302);
+      const setCookie = response.headers["set-cookie"] as string;
       expect(setCookie).toBeDefined();
+      // No remember → session-only cookie (no Max-Age)
+      expect(setCookie.toLowerCase()).not.toContain("max-age=");
+    });
+
+    it("sets a persistent cookie with Max-Age when 'remember' is checked", async () => {
+      const [dispatch] = await setupMyController([Login, "POST"]);
+      const { response } = await dispatch({
+        method: "POST",
+        body: `username=${testUsername}&password=${testPassword}&remember=on`,
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+      });
+      expect(response.statusCode).toEqual(302);
+      const setCookie = response.headers["set-cookie"] as string;
+      expect(setCookie).toBeDefined();
+      expect(setCookie.toLowerCase()).toContain("max-age=");
     });
 
     it("reuses existing session cookie when one exists", async () => {

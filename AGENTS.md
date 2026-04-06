@@ -1,5 +1,15 @@
 # AGENTS.md
 
+## ⛔ Blocking Quality Gates
+
+**A task is NOT complete until ALL of the following pass with zero errors:**
+
+1. **ESLint/Typescript** — `npm run lint` must exit cleanly (no Typescript OR lint errors OR warnings).
+2. **All tests** — `npm test` must pass (backend unit, frontend, and E2E).
+3. **Clean test output** — no unexpected `console.log`, `console.warn`, stray stdout, or extra output from tests.
+
+If any gate fails, **fix it before finishing**. Do not hand off or mark the task as done while these are broken.
+
 ## Project Overview
 
 A full-stack web application built with Express 5 (backend) and React (frontend). The backend renders Pug templates and serves them along with React-bundled frontend assets. Session state is managed via Redis. Tests include unit tests (Vitest + light-my-request), frontend tests (Vitest + React Testing Library), and E2E tests (Vitest + Playwright).

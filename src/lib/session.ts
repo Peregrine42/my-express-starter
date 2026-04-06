@@ -2,6 +2,12 @@ import crypto from "crypto";
 import Redis from "ioredis";
 import express from "express";
 
+/** 24 hours in milliseconds — default Redis expiry for all sessions. */
+export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+
+/** 30 days in milliseconds — used for "remember me" persistent sessions. */
+export const REMEMBER_ME_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
 /* istanbul ignore next */
 export function generateSessionId() {
   return crypto.randomUUID().toString();
@@ -41,6 +47,7 @@ export async function setStringValueFromSession(
   res: SessionRes,
   key: string,
   value: string,
+  ttlMs?: number,
 ) {
   if (!res.locals.allowedSessionObjectKeys.includes(key)) {
     throw new Error(
@@ -56,7 +63,13 @@ Allowed keys: ${res.locals.allowedSessionObjectKeys.join(", ")}
   if (req.cookies?.session && (await hasSession(req, res))) {
     const redis = new Redis({ keyPrefix: `session:${key}:` });
     try {
-      await redis.set(req.cookies.session, value);
+      const expiry = ttlMs ?? SESSION_TTL_MS;
+      await redis.set(
+        req.cookies.session,
+        value,
+        "EX",
+        Math.ceil(expiry / 1000),
+      );
       result = true;
     } finally {
       redis.disconnect();
@@ -161,13 +174,15 @@ export async function setupSession(
   _req: SessionReq,
   _res: SessionRes,
   sessionIdOverride?: string,
+  ttlMs?: number,
 ) {
   let result: boolean = false;
   const sessionId = sessionIdOverride || generateSessionId();
 
   const redis = new Redis({ keyPrefix: `session::` });
   try {
-    await redis.set(sessionId, "present");
+    const expiry = ttlMs ?? SESSION_TTL_MS;
+    await redis.set(sessionId, "present", "EX", Math.ceil(expiry / 1000));
     result = true;
   } finally {
     redis.disconnect();

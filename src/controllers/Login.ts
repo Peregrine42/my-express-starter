@@ -6,6 +6,7 @@ import {
   setupSession,
   setStringValueFromSession,
   destroySession,
+  REMEMBER_ME_TTL_MS,
 } from "../lib/session";
 import { isSafeRedirect } from "../lib/auth";
 import { getPool } from "../lib/db";
@@ -64,7 +65,14 @@ export class Login extends BaseController {
     const redirectTo =
       rawRedirect && isSafeRedirect(rawRedirect) ? rawRedirect : "/counter";
 
-    await this.createSessionAndRedirect(req, res, result.userId, redirectTo);
+    const remember = req.body?.remember === "on";
+    await this.createSessionAndRedirect(
+      req,
+      res,
+      result.userId,
+      redirectTo,
+      remember,
+    );
   };
 
   /**
@@ -109,6 +117,7 @@ export class Login extends BaseController {
     res: express.Response,
     userId: number,
     redirectTo: string,
+    remember: boolean = false,
   ) {
     // Destroy old session to prevent session fixation
     const oldSessionId = req.cookies?.session;
@@ -116,13 +125,18 @@ export class Login extends BaseController {
       await destroySession(oldSessionId);
     }
 
+    const ttlMs = remember ? REMEMBER_ME_TTL_MS : undefined;
+
     // Always create a brand-new session
     const sessionId = generateSessionId();
-    await setupSession(req, res, sessionId);
-    res.cookie("session", sessionId, { path: "/" });
+    await setupSession(req, res, sessionId, ttlMs);
+    res.cookie("session", sessionId, {
+      path: "/",
+      ...(remember ? { maxAge: REMEMBER_ME_TTL_MS } : {}),
+    });
     req.cookies.session = sessionId;
 
-    await setStringValueFromSession(req, res, "user_id", String(userId));
+    await setStringValueFromSession(req, res, "user_id", String(userId), ttlMs);
 
     res.redirect(redirectTo);
   }
