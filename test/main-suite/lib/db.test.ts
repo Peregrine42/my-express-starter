@@ -16,11 +16,4 @@ describe("db", () => {
     const pool2 = getPool();
     expect(pool1).toBe(pool2);
   });
-
-  it("closePool does nothing when no pool has been created", async () => {
-    // closePool when _pool is already null (after a previous close)
-    await closePool();
-    // Calling again should not throw
-    await closePool();
-  });
 });

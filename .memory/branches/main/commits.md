@@ -342,3 +342,71 @@ The main branch has evolved from initial Brain initialization capturing a basic 
 - Successfully implemented session clearing that properly emits session_shutdown → session_start events, which frontend handles to re-sync all UI state
 - Maintained existing event flow patterns while providing complete session lifecycle management through Tau's web interface
 - Verified solution works with Pi's extension command system and WebSocket event handling architecture
+
+---
+
+## Commit 0a94f4eb | 2026-04-06T09:52:31.604Z
+
+### Merge from remember-me
+
+Merged remember-me branch: implemented persistent session cookies with "remember me" checkbox (30-day Redis TTL vs 24-hour default via SESSION_TTL_MS and REMEMBER_ME_TTL_MS constants), and replaced auto-registration on login with environment-variable-driven initial user management (INITIAL_USER_USERNAME/INITIAL_USER_PASSWORD) via ensureInitialUser() startup function that creates or resets credentials. All 122 tests passing with 100% coverage.
+
+---
+
+## Commit b9e9277c | 2026-04-06T09:52:36.522Z
+
+### Merge from login-password
+
+Merged login-password branch: decided on global auth middleware (requireAuth in getRouter.ts) over per-controller checks for consistent security. Auth middleware redirects unauthenticated users to /login?redirect=<originalUrl>. Public paths (GET/POST /login) bypass auth.
+
+---
+
+## Commit ac1aaa83 | 2026-04-06T09:52:59.107Z
+
+### Merge from refactor-clarity
+
+Merged refactor-clarity branch: SessionCounter.ensureLoggedIn now returns userId | null (eliminating duplicate getUserId calls and halving Redis round-trips), Login controller extracted authenticateUser method for clearer POST flow (validate → authenticate → session → redirect), and cleanTestUser helper extracted to test/helpers/user.ts for shared cleanup.
+
+---
+
+## Commit f24edc46 | 2026-04-06T09:53:03.920Z
+
+### Merge from security-improvements
+
+Merged security-improvements branch: implemented global CSRF protection using csrf-sync with custom Redis-backed token management, session fixation protection (regenerate session IDs on login, destroy old sessions), post-login redirect to original URL via safe redirect parameter, and +csrfField Pug mixin for DRY form protection across all templates.
+
+---
+
+## Commit 566eceaf | 2026-04-06T09:53:21.183Z
+
+### Merge from test-coverage-100
+
+Merged test-coverage-100 branch: configured vitest coverage (v8 provider) with proper exclusions (migrations, entrypoints), added comprehensive tests for Login/Logout controllers, db singleton, session edge cases, and console logging. Achieved 100% coverage across all backend non-migration code and frontend code.
+
+---
+
+## Commit fa1589bb | 2026-04-06T09:53:27.541Z
+
+### Merge from standalone-server
+
+Merged and archived standalone-server branch: this was work on the Tau web UI standalone server (JSONL RPC bridge between HTTP server and pi child process), which is a separate project (pi/tau), not the my-app project. The work included RPC client implementation, command handler rewrite, auto-titling, extension UI bridge, and mobile responsiveness fixes. Noting this was for the wrong project context — the branch can be safely deleted.
+
+---
+
+## Commit 3e2d906b | 2026-04-06T09:57:43.413Z
+
+### Branch Purpose
+
+Main project memory branch tracking ongoing development of the Express 5 + React 19 full-stack web application with PostgreSQL integration, user authentication, comprehensive testing infrastructure, and robust security features including CSRF protection and session management.
+
+### Previous Progress Summary
+
+The main branch evolved from initial Brain initialization capturing a basic Express 5 backend with Pug templates and Redis sessions to a full-featured application through six significant merges: remember-me branch added persistent "remember me" cookies and environment-driven initial user management; login-password branch implemented global auth middleware with consistent security; refactor-clarity branch optimized session management and extracted shared helpers; security-improvements branch added CSRF protection, session fixation prevention, and safe redirect validation; test-coverage-100 branch achieved 100% backend coverage with comprehensive testing; and standalone-server branch (archived as wrong project context) contributed RPC infrastructure concepts. The application now features PostgreSQL database integration, umzug migrations, user authentication, counter functionality with Post/Redirect/Get pattern, Redis-backed sessions with configurable TTL, and a complete test suite with JSON reporting.
+
+### This Commit's Contribution
+
+- Consolidated project memory by merging all 6 branches (remember-me, login-password, refactor-clarity, security-improvements, test-coverage-100, standalone-server) into main, eliminating branch complexity while preserving all architectural improvements
+- Cleaned up memory structure by deleting all merged branch directories, streamlining the Brain memory system for better project navigation
+- Updated main.md to accurately reflect current project state with 126 tests at 100% coverage, JSON test reports, auth/security/session features, and complete roadmap including key decisions about architecture, database integration, security, and testing
+- Removed extraneous Tau/pi standalone-server work that belonged to a different project context, preventing confusion about my-app vs Tau project boundaries
+- Maintained comprehensive documentation of all merged features including global auth middleware, CSRF protection, session management, persistent cookies, and PostgreSQL integration while ensuring the roadmap reflects the true current state of the application

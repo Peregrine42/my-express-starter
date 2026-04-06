@@ -13,8 +13,6 @@ export function getPool(): pg.Pool {
 }
 
 export async function closePool() {
-  if (_pool) {
-    await _pool.end();
-    _pool = null;
-  }
+  await _pool?.end();
+  _pool = null;
 }

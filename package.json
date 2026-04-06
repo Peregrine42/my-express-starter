@@ -87,6 +87,7 @@
     "test": "npm run backend:test && npm run frontend:test && npm run test:e2e",
     "test:watch": "concurrently npm:backend:test:watch npm:frontend:test:watch",
     "test:e2e": "node --env-file=.env ./node_modules/vitest/vitest.mjs run --config vitest.config.e2e.ts",
+    "test:report": "tsx scripts/build-test-report.ts && cat reports/test-report.md",
     "postinstall": "patch-package",
     "prepare": "husky"
   }

@@ -4,6 +4,7 @@ dist
 public/pages
 .DS_Store
 coverage
+reports
 tmp-local-storage*
 .memory/branches/*/log.md
 .memory/state.yaml

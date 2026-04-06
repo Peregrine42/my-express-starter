@@ -5,6 +5,10 @@ export default defineConfig({
     globals: true,
     include: ["test/main-suite/**/*.test.ts"],
     setupFiles: ["./test/setupTests.ts"],
+    reporters: ["default", "json"],
+    outputFile: {
+      json: "reports/backend.json",
+    },
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],

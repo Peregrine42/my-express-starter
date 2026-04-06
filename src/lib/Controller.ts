@@ -10,16 +10,6 @@ export function isRes(
   }
 }
 
-export function isReq(
-  req: Partial<typeof express.request> | typeof express.request,
-): req is typeof express.request {
-  if (req.headers === express.request.headers) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 function notFound(
   _req: Partial<typeof express.request>,
   res: Partial<typeof express.response>,

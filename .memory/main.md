@@ -6,35 +6,59 @@ A full-stack web application serving Pug templates with React-bundled frontend a
 
 ## Current State
 
-- **Routes**: `GET /` (Home), `GET /login`, `POST /login`, `POST /logout`, `GET|POST|DELETE /counter` (SessionCounter — increment/decrement)
-- **Database**: PostgreSQL on `localhost:5432` with `users` and `counters` tables; migrations via umzug (`src/migrations/*.migration.ts`), tracked in `umzug_migrations` table
-- **Auth**: Password-based login — `Login` controller verifies password via bcrypt for existing users, registers new users with hashed password; stores `user_id` in Redis session; `SessionCounter` redirects to `/login` if no session/user_id
-- **Session**: Redis-backed via ioredis; session keys now `["user_id"]` (counter value moved to Postgres)
-- **Backend**: Express 5, TypeScript strict mode, `method-override` for DELETE/PUT/PATCH via HTML forms
-- **Middleware stack**: cookieParser → sessionSetup → urlencoded body parser → methodOverride → router
+- **Routes**: `GET /` (Home), `GET /login`, `POST /login`, `POST /logout`, `GET|POST|DELETE|PUT /counter` (increment/decrement/reset)
+- **Database**: PostgreSQL on `localhost:5432` with `users` and `counters` tables; migrations via umzug (`src/migrations/*.migration.ts`), tracked in `umzug_migrations` table; auto-runs pending migrations at startup
+- **Auth**: Password-based login with environment-variable-driven initial user (`INITIAL_USER_USERNAME` / `INITIAL_USER_PASSWORD`) via `ensureInitialUser()` at startup; global `requireAuth` middleware in router; stores `user_id` in Redis session; redirects to `/login?redirect=<originalUrl>` for protected routes
+- **Security**: CSRF protection via csrf-sync with Redis-backed tokens; session fixation protection (regenerate session ID on login); safe redirect validation
+- **Session**: Redis-backed via ioredis; `SESSION_TTL_MS` (24h default), `REMEMBER_ME_TTL_MS` (30 days when "remember me" checked); persistent cookie with `maxAge` vs session-only cookie
+- **Middleware stack**: cookieParser → sessionSetup → hasSession (sets `isLoggedIn`) → urlencoded body parser → methodOverride → router (with `requireAuth` guard)
 - **Frontend**: React 19 bundled with tsdown, output to `public/pages/`
-- **Migrations**: umzug with custom Postgres storage; CLI via `db:up`/`db:down`/`db:status`/`db:create` (runs through tsx); auto-runs pending migrations at startup in `beforeAppStartup`
-- **Tests**: 95 backend unit tests green (100% coverage); E2E tests updated to seed user in Postgres; frontend tests unchanged
-- **Build**: tsdown for both backend (`unbundle: true`, CJS) and frontend (ESM); `pg` and deps in `alwaysBundle` config
-- **Linting**: ESLint + Prettier + cspell; no new ignores or suppressions introduced
+- **Tests**: 126 tests total (122 backend unit at 100% coverage, 1 frontend, 3 E2E); JSON reports output to `reports/` on every run; `npm run test:report` generates `reports/test-report.md` for review
+- **Build**: tsdown for both backend (`unbundle: true`, CJS) and frontend (ESM); `pg`, `bcrypt` and deps in `alwaysBundle` config
 
 ## Key Decisions Made
 
-- **Express 5** over Express 4 — using latest stable
+### Architecture
+
+- **Express 5** — latest stable, using async error handling and modern patterns
+- **Controller-base architecture**: routes declared in `getMyRoutes.ts`, controllers extend `BaseController`; handled via custom `getRouter.ts` that binds routes and applies `requireAuth` middleware
+- **Global auth middleware** (`requireAuth`) over per-controller checks — ensures consistent security; public paths (`GET/POST /login`) bypass auth
 - **tsdown** as bundler for both backend and frontend
-- **Pug** templates extended from a shared layout
+
+### Database & Auth
+
+- **umzug** over db-migrate — TypeScript-native migrations with proper type safety
+- **umzug custom Postgres storage** — `storage.executed()` must return `string[]` (names), not `MigrationMeta[]` objects
+- **bcrypt** for password hashing — SALT_ROUNDS=12; added to `alwaysBundle`
+- **Environment-variable initial user** — `ensureInitialUser()` creates or resets user at startup; Login controller only authenticates, never creates
+- **Post/Redirect/Get pattern** on counter POST/DELETE — prevents browser form resubmission warning
+
+### Security
+
+- **csrf-sync** with Redis-backed state — chosen over csrf-csrf for robust token generation; `+csrfField` Pug mixin for DRY form protection
+- **Session fixation protection** — always regenerate session ID on login, destroy old session data
+- **Safe redirect validation** — post-login redirect uses `isSafeRedirect()` to prevent open redirect attacks
+
+### Session & Middleware
+
 - **Redis-backed sessions** with ioredis, key-prefix pattern `session:<key>:<sessionId>`
-- **Vitest for testing** (v4) — runs TypeScript directly via Vite's transform pipeline; no pre-build step needed. ESM-only packages handled by Vite's dependency pre-bundling.
-- **Controller-base architecture**: routes declared in `getMyRoutes.ts`, controllers extend `BaseController`
-- **method-override pattern**: HTML forms POST with `_method` hidden field; function getter `methodOverride((req) => req.body?._method)`
-- **Testing non-standard methods**: `setupMyController` dispatches actual HTTP methods directly — don't test the POST→override flow in unit tests
-- **E2E globalSetup**: server + browser lifecycle in `test/e2e-suite/globalSetup.ts`; Playwright `chromium.launchServer()`; Vitest `project.provide`/`inject` for WS endpoint
-- **Shared middleware setup**: `src/lib/attachMiddleware.ts` with `attachAppMiddleware(app, { withRouter? })`
-- **umzug over db-migrate** — TypeScript-native migrations with proper type safety; db-migrate's TS support was poor and required ESLint ignores for generated JS files
-- **umzug custom Postgres storage** — `storage.executed()` must return `string[]` (names), not `MigrationMeta[]` objects — umzug creates a Set from the results and checks membership by string name
-- **pg bundled via tsdown** — `pg` and its dependencies (`pg-protocol`, `pg-types`, `pg-pool`, etc.) added to `alwaysBundle` config since they contain native addon lookups
-- **bcrypt for password hashing** — `src/lib/password.ts` with `hashPassword()` and `verifyPassword()`; SALT_ROUNDS=12; bcrypt added to `alwaysBundle` config
-- **Post/Redirect/Get pattern** — POST/DELETE on `/counter` redirect 302 to GET `/counter` instead of rendering inline; prevents browser "confirm form resubmission" warning on refresh
+- **method-override pattern**: function getter `methodOverride((req) => req.body?._method)` — the string form reads from query string, not body
+- **Session TTL**: default 24h, extended to 30d when "remember me" checked; cookie `maxAge` set accordingly
+- **Shared middleware setup**: `attachAppMiddleware(app, { withRouter? })` in `src/lib/attachMiddleware.ts`
+
+### Testing
+
+- **Vitest v4** — runs TypeScript directly via Vite's transform pipeline; no pre-build step needed
+- **light-my-request** for backend HTTP testing — all controllers tested without supertest
+- **Playwright** for E2E tests (migrated from Puppeteer)
+- **E2E globalSetup**: server + browser lifecycle in `test/e2e-suite/globalSetup.ts`; seeds initial user in Postgres
+- **Testing non-standard methods**: `setupMyController` dispatches actual HTTP methods directly — don't test POST→override in unit tests
+- **JSON test reports** — each vitest config writes to `reports/*.json`; `scripts/build-test-report.ts` generates markdown summary for reviewing test descriptions
+
+### Dependencies
+
+- **pg bundled via tsdown** — contains native addon lookups that break without bundling
+- **bcrypt bundled via tsdown** — same reason
 
 ## Milestones
 
@@ -43,17 +67,22 @@ A full-stack web application serving Pug templates with React-bundled frontend a
 - [x] Project scaffolding (Express 5 + TypeScript + Pug + React)
 - [x] Session middleware with Redis
 - [x] Controller architecture with declarative routing
-- [x] Home page and SessionCounter page (increment + decrement)
+- [x] Home page and counter page (increment, decrement, reset)
 - [x] Test infrastructure (backend unit, frontend, E2E)
+- [x] PostgreSQL integration with `pg` pool and umzug migrations
+- [x] Password-based login/logout with bcrypt
+- [x] Counter migrated from Redis session to Postgres `counters` table
+- [x] Global auth middleware (requireAuth)
+- [x] CSRF protection (csrf-sync + Redis tokens)
+- [x] Session fixation protection
+- [x] Post-login safe redirect
+- [x] Post/Redirect/Get on counter POST/DELETE
+- [x] Environment-variable-driven initial user management
+- [x] "Remember me" with persistent cookies and Redis TTL
+- [x] 100% backend test coverage
+- [x] JSON test reports + markdown summary generation
 - [x] AGENTS.md and project documentation
-- [x] PostgreSQL integration with `pg` pool (`src/lib/db.ts`)
-- [x] umzug TypeScript migrations (initial schema: `users` + `counters` tables)
-- [x] Password-based login/logout flow (`Login` + `Logout` controllers, `login.pug` with password field)
-- [x] Counter migrated from Redis session to Postgres `counters` table, keyed by `user_id`
-- [x] Auth guard on `/counter` — redirects to `/login` if no valid session with `user_id`
-- [x] All tests updated and passing (95 backend unit, 100% coverage, E2E globalSetup seeds Postgres user)
-- [x] Post/Redirect/Get on counter POST/DELETE — prevents browser form resubmission warning on refresh
 
 ### Planned
 
-- [ ] Full E2E test run to verify end-to-end login → counter flow
+- [ ] Review test descriptions for gaps and inconsistencies (using `npm run test:report`)

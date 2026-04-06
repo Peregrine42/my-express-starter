@@ -9,6 +9,10 @@ export default defineConfig({
     pool: "forks",
     fileParallelism: false,
     testTimeout: 30_000,
+    reporters: ["default", "json"],
+    outputFile: {
+      json: "reports/e2e.json",
+    },
     coverage: {
       enabled: false,
     },

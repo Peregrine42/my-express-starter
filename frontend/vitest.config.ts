@@ -6,6 +6,10 @@ export default defineConfig({
     environment: "jsdom",
     include: ["test/suite/**/*.test.ts", "test/suite/**/*.test.tsx"],
     setupFiles: ["./test/setupTests.ts"],
+    reporters: ["default", "json"],
+    outputFile: {
+      json: "reports/frontend.json",
+    },
     coverage: {
       provider: "v8",
       include: ["src/pages/**/*.tsx"],
